@@ -236,7 +236,6 @@ class Main(Screen):
                 self.special_order_update_data()
             else:
                 self.update_data()
-            sleep(0.5)
 
     def order(self, order_by, reverse):
         def keyfunc(c):
@@ -298,7 +297,6 @@ class Main(Screen):
         while True:
             if self.order_by not in ("proc_mem", "proc_cpu"):
                 self.update_visible()
-            sleep(0.5)
 
 
 class Killer(MDApp):
