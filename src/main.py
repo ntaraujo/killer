@@ -39,6 +39,8 @@ def update_processes():
     processes_lock.acquire()
     for pid in list(processes):
         if pid not in temp_processes:
+            if pid in app.current_selection:
+                app.current_selection.remove(pid)
             del processes[pid]
 
     for pid, proc in temp_processes.items():
