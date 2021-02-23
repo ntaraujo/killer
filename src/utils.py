@@ -89,7 +89,10 @@ def kill_proc_tree(parent, include_parent=True):
     "on_terminate", if specified, is a callback function which is
     called as soon as a child terminates.
     """
-    children = parent.children(recursive=True)
+    try:
+        children = parent.children(recursive=True)
+    except NoSuchProcess:
+        children = list()
     if include_parent:
         children.append(parent)
     for p in children:
@@ -103,4 +106,4 @@ def kill(proc):
         except (NoSuchProcess, AccessDenied):
             print(f"Process {proc.pid} not killed >:(")
     else:
-        print("kill myself?")
+        print("kill myself? bruh")
