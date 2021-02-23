@@ -1,4 +1,4 @@
-from psutil import NoSuchProcess, wait_procs, AccessDenied
+from psutil import NoSuchProcess, AccessDenied
 from win32con import SM_CXICON
 from win32api import GetSystemMetrics
 from os.path import dirname, abspath
@@ -10,7 +10,7 @@ from PIL import Image
 from subprocess import Popen, PIPE
 from os import PathLike, getpid
 from typing import Union
-from pywintypes import error
+from pywintypes import error # noqa
 from bisect import bisect_left, bisect_right
 
 this_dir = dirname(abspath(__file__))
