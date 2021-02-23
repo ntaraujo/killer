@@ -1,0 +1,6 @@
+Kivy==2.0.0
+Pillow==8.1.0
+psutil==5.8.0
+pypiwin32==223
+pywin32==300
+kivymd~=0.104.1

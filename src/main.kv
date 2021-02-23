@@ -1,0 +1,106 @@
+<CustomOneLineIconListItem>:
+
+    IconLeftWidget:
+        icon: root.icon
+
+
+<Main>:
+
+    MDBoxLayout:
+        orientation: 'vertical'
+        spacing: dp(10)
+        padding: dp(20)
+
+        MDBoxLayout:
+            adaptive_height: True
+            MDIconButton:
+                icon: 'magnify'
+            MDTextField:
+                id: search_field
+                hint_text: 'Search process'
+
+        MDBoxLayout:
+            adaptive_height: True
+            MDCheckbox:
+                id: multiple_select
+                size_hint: None, None
+                size: "48dp", "48dp"
+                pos_hint: {'center_x': .5, 'center_y': .5}
+                on_release: app.select_rows(self.active)
+            AnchorLayout:
+                anchor_x: "center"
+                anchor_y: "center"
+                size_hint: None, None
+                size: 50, 50
+                IButton:
+                    id: order
+                    size_hint: None, None
+                    size: 32, 32
+                    icon: "arrow-down"
+                    on_release: app.sort_by(app.sorted_by, "arrow-up" if self.icon == "arrow-down" else "arrow-down")
+            LButton:
+                size_hint_x: None
+                width: "48dp"
+                text: "PID"
+            LButton:
+                text: "Process Name"
+            LButton:
+                text: "CPU Usage"
+            LButton:
+                text: "Memory Usage"
+
+        RecycleView:
+            id: rv
+            viewclass: 'ProcessCell'
+
+            SelectableRecycleBoxLayout:
+                default_size: None, dp(48)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+                orientation: 'vertical'
+                multiselect: True
+                touch_multiselect: True
+
+<ProcessCell>
+    adaptive_height: True
+    MDCheckbox:
+        size_hint: None, None
+        size: "48dp", "48dp"
+        pos_hint: {'center_x': .5, 'center_y': .5}
+        active: root.proc_pid in app.current_selection
+        on_active: app.select_row(root.proc_pid, self.active)
+    AnchorLayout:
+        anchor_x: "center"
+        anchor_y: "center"
+        size_hint: None, None
+        size: 50, 50
+        MDIcon:
+            size_hint: None, None
+            size: 32, 32
+            icon: root.proc_icon
+    MDLabel:
+        size_hint_x: None
+        width: "48dp"
+        text: root.proc_pid
+    MDLabel:
+        text: root.proc_name
+    MDLabel:
+        text: root.proc_cpu
+        halign: "center"
+    MDLabel:
+        text: root.proc_mem
+        halign: "center"
+
+<LButton@ButtonBehavior+MDLabel>
+    sorted_by: self.text == app.sorted_by
+    canvas.before:
+        Color:
+            rgba: app.theme_cls.primary_color if self.sorted_by else (0, 0, 0, 0)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    on_release: app.sort_by(self.text, app.main.ids.order.icon)
+    halign: "center"
+
+<IButton@ButtonBehavior+MDIcon>
