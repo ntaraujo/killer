@@ -62,6 +62,25 @@
                 multiselect: True
                 touch_multiselect: True
 
+        MDBoxLayout:
+            adaptive_height: True
+            MDIconButton:
+                icon: "arrow-up-drop-circle-outline"
+                on_release: root.ids.rv.scroll_y = 1
+            MDIconButton:
+                icon: "arrow-down-drop-circle-outline"
+                on_release: root.ids.rv.scroll_y = 0
+            BoxLayout
+            MDBoxLayout:
+                adaptive_width: True
+                spacing: "10dp"
+                MDRaisedButton:
+                    text: "KILL"
+                    on_release: app.kill_selected()
+                MDRaisedButton:
+                    text: "THE CHILDREN TOO"
+                    on_release: app.kill_selected_and_children()
+
 <ProcessCell>
     adaptive_height: True
     MDCheckbox:

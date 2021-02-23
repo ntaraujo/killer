@@ -1,3 +1,4 @@
+from psutil import NoSuchProcess, wait_procs, AccessDenied
 from win32con import SM_CXICON
 from win32api import GetSystemMetrics
 from os.path import dirname, abspath
@@ -11,6 +12,7 @@ from os import PathLike
 from typing import Union
 from pywintypes import error
 from bisect import bisect_left, bisect_right
+from signal import SIGTERM
 
 this_dir = dirname(abspath(__file__))
 path_type = Union[str, bytes, PathLike]
@@ -78,3 +80,23 @@ def ordering_bisect_left(seq, e, reverse, lo=None, hi=None):
         return len(seq) - bisect_right(seq[::-1], e, lo, hi)
     else:
         return bisect_left(seq, e, lo, hi)
+
+
+def kill_proc_tree(parent, sig=SIGTERM, include_parent=True,
+                   timeout=None, on_terminate=None):
+    """Kill a process tree (including grandchildren) with signal
+    "sig" and return a (gone, still_alive) tuple.
+    "on_terminate", if specified, is a callback function which is
+    called as soon as a child terminates.
+    """
+    children = parent.children(recursive=True)
+    if include_parent:
+        children.append(parent)
+    for p in children:
+        try:
+            p.send_signal(sig)
+        except (NoSuchProcess, AccessDenied):
+            pass
+    gone, alive = wait_procs(children, timeout=timeout,
+                             callback=on_terminate)
+    return gone, alive

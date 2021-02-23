@@ -1,8 +1,8 @@
 from kivy.uix.recycleview import RecycleView
-from psutil import process_iter, NoSuchProcess, cpu_count
+from psutil import process_iter, NoSuchProcess, cpu_count, AccessDenied
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
-from src.utils import icon_path, keyring_bisect_left
+from src.utils import icon_path, keyring_bisect_left, kill_proc_tree
 from kivymd.uix.list import OneLineIconListItem
 from kivy.properties import StringProperty, ListProperty
 from kivy.lang import Builder
@@ -353,6 +353,22 @@ class Killer(MDApp):
         desc = True if order == "arrow-up" else False
         print(f'Ordering by {key} in {"de" if desc else "a"}scendent order')
         Thread(target=self.main.order, args=(key, desc), daemon=True).start()
+
+    def kill_selected(self):
+        with processes_lock:
+            for pid in self.current_selection:
+                try:
+                    processes[pid].kill()
+                except AccessDenied:
+                    print(f"Process {pid} not killed >:(")
+
+    def kill_selected_and_children(self):
+        with processes_lock:
+            for pid in self.current_selection:
+                gone, alive = kill_proc_tree(processes[pid])
+                if alive:
+                    fmt_alive = str([f'{p.pid}, ' for p in alive])
+                    print(f"Processes {fmt_alive} not killed >:(")
 
 
 class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior,
