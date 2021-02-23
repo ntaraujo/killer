@@ -281,12 +281,15 @@ class Main(Screen):
     def update_single(self, index, cpu=True, mem=True):
         new_cell = self.ids.rv.data[index].copy()
         pid = new_cell['proc_pid']
+        proc = processes.get(pid)
+        if proc is None:
+            return
         try:
-            with processes[pid].oneshot():
+            with proc.oneshot():
                 if cpu:
-                    new_cell["proc_cpu"] = f'{processes[pid].cpu_percent(1) / cpus:.2f}%'
+                    new_cell["proc_cpu"] = f'{proc.cpu_percent(1) / cpus:.2f}%'
                 if mem:
-                    new_cell["proc_mem"] = f'{processes[pid].memory_percent():.2f}%'
+                    new_cell["proc_mem"] = f'{proc.memory_percent():.2f}%'
         except NoSuchProcess:
             print(f"NoSuchProcess {pid} in Main.update_single")
         finally:
