@@ -83,11 +83,6 @@ def ordering_bisect_left(seq, e, reverse, lo=None, hi=None):
 
 
 def kill_proc_tree(parent, include_parent=True):
-    """Kill a process tree (including grandchildren) with signal
-    "sig" and return a (gone, still_alive) tuple.
-    "on_terminate", if specified, is a callback function which is
-    called as soon as a child terminates.
-    """
     try:
         children = parent.children(recursive=True)
     except NoSuchProcess:
