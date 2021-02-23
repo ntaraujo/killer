@@ -47,7 +47,7 @@ def update_processes():
         if pid in processes:
             if proc.info['name'] != processes[pid].info['name']:
                 processes[pid] = proc
-        else:
+        elif pid != "0":
             processes[pid] = proc
     processes_lock.release()
 
