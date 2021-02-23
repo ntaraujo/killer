@@ -12,7 +12,6 @@ from os import PathLike, getpid
 from typing import Union
 from pywintypes import error
 from bisect import bisect_left, bisect_right
-from signal import SIGTERM
 
 this_dir = dirname(abspath(__file__))
 this_pid = getpid()

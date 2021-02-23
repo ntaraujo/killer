@@ -1,25 +1,20 @@
 from kivy.uix.recycleview import RecycleView
-from psutil import process_iter, NoSuchProcess, cpu_count, AccessDenied
+from psutil import process_iter, NoSuchProcess, cpu_count
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
 from src.utils import icon_path, keyring_bisect_left, kill_proc_tree, kill
-from kivymd.uix.list import OneLineIconListItem
 from kivy.properties import StringProperty, ListProperty
 from kivy.lang import Builder
 from os.path import dirname, abspath
 from os.path import join as p_join
-from kivy.clock import Clock, mainthread
+from kivy.clock import mainthread
 from time import sleep
 from threading import Thread, Lock
-
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivymd.uix.boxlayout import MDBoxLayout
-from kivy.properties import BooleanProperty
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.recycleview.layout import LayoutSelectionBehavior
-from pprint import pprint
-from copy import deepcopy
 
 processes = dict()
 processes_lock = Lock()
