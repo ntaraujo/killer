@@ -1,5 +1,5 @@
 from kivy.uix.recycleview import RecycleView
-from psutil import process_iter, NoSuchProcess
+from psutil import process_iter, NoSuchProcess, cpu_count
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
 from src.utils import icon_path, keyring_bisect_left
@@ -26,6 +26,8 @@ processes_lock = Lock()
 
 this_dir = dirname(abspath(__file__))
 Builder.load_file(p_join(this_dir, 'main.kv'))
+
+cpus = cpu_count()
 
 
 def update_processes():
@@ -63,7 +65,6 @@ def always_updating_processes():
 
 class Main(Screen):
     data_lock = Lock()
-    visible_lock = Lock()
     keyfunc = reverse = order_by = None
     visible_range = (0, 0)
     special_order_cells = list()
@@ -109,7 +110,7 @@ class Main(Screen):
 
         try:
             if cpu:
-                proc_cpu = f'{proc.cpu_percent(1):.2f}%'
+                proc_cpu = f'{proc.cpu_percent(1) / cpus:.2f}%'
             if mem:
                 proc_mem = f'{proc.memory_percent():.2f}%'
         except NoSuchProcess:
@@ -129,7 +130,7 @@ class Main(Screen):
         proc = processes[proc_pid]
         try:
             if cpu:
-                cell["proc_cpu"] = f'{proc.cpu_percent(1):.2f}%'
+                cell["proc_cpu"] = f'{proc.cpu_percent(1) / cpus:.2f}%'
             if mem:
                 cell["proc_mem"] = f'{proc.memory_percent():.2f}%'
         except NoSuchProcess:
@@ -234,11 +235,10 @@ class Main(Screen):
 
     def always_updating_data(self):
         while True:
-            with self.visible_lock:
-                if self.order_by in ("proc_cpu", "proc_mem"):
-                    self.special_order_update_data()
-                else:
-                    self.update_data()
+            if self.order_by in ("proc_cpu", "proc_mem"):
+                self.special_order_update_data()
+            else:
+                self.update_data()
             sleep(0.5)
 
     def order(self, order_by, reverse):
@@ -284,7 +284,7 @@ class Main(Screen):
         try:
             with processes[pid].oneshot():
                 if cpu:
-                    new_cell["proc_cpu"] = f'{processes[pid].cpu_percent(1):.2f}%'
+                    new_cell["proc_cpu"] = f'{processes[pid].cpu_percent(1) / cpus:.2f}%'
                 if mem:
                     new_cell["proc_mem"] = f'{processes[pid].memory_percent():.2f}%'
         except NoSuchProcess:
@@ -294,7 +294,7 @@ class Main(Screen):
 
     def always_updating_visible(self):
         while True:
-            with self.visible_lock:
+            if self.order_by not in ("proc_mem", "proc_cpu"):
                 self.update_visible()
             sleep(0.5)
 
