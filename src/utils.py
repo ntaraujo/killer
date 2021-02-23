@@ -8,13 +8,14 @@ from win32ui import CreateDCFromHandle, CreateBitmap
 from win32gui import ExtractIconEx, DestroyIcon, GetDC
 from PIL import Image
 from subprocess import Popen, PIPE
-from os import PathLike
+from os import PathLike, getpid
 from typing import Union
 from pywintypes import error
 from bisect import bisect_left, bisect_right
 from signal import SIGTERM
 
 this_dir = dirname(abspath(__file__))
+this_pid = getpid()
 path_type = Union[str, bytes, PathLike]
 default_icon_path = p_join(this_dir, '../icons', 'default.png')
 
@@ -82,8 +83,7 @@ def ordering_bisect_left(seq, e, reverse, lo=None, hi=None):
         return bisect_left(seq, e, lo, hi)
 
 
-def kill_proc_tree(parent, sig=SIGTERM, include_parent=True,
-                   timeout=None, on_terminate=None):
+def kill_proc_tree(parent, include_parent=True):
     """Kill a process tree (including grandchildren) with signal
     "sig" and return a (gone, still_alive) tuple.
     "on_terminate", if specified, is a callback function which is
@@ -93,10 +93,12 @@ def kill_proc_tree(parent, sig=SIGTERM, include_parent=True,
     if include_parent:
         children.append(parent)
     for p in children:
+        kill(p)
+
+
+def kill(proc):
+    if proc.pid != this_pid:
         try:
-            p.send_signal(sig)
+            proc.kill()
         except (NoSuchProcess, AccessDenied):
-            pass
-    gone, alive = wait_procs(children, timeout=timeout,
-                             callback=on_terminate)
-    return gone, alive
+            print(f"Process {proc.pid} not killed >:(")

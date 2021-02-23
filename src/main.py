@@ -2,7 +2,7 @@ from kivy.uix.recycleview import RecycleView
 from psutil import process_iter, NoSuchProcess, cpu_count, AccessDenied
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
-from src.utils import icon_path, keyring_bisect_left, kill_proc_tree
+from src.utils import icon_path, keyring_bisect_left, kill_proc_tree, kill
 from kivymd.uix.list import OneLineIconListItem
 from kivy.properties import StringProperty, ListProperty
 from kivy.lang import Builder
@@ -274,6 +274,8 @@ class Main(Screen):
         singles = []
         self.data_lock.acquire()
         for index in self.visible_range:
+            if index >= len(self.ids.rv.data):
+                break
             singles.append(Thread(target=self.update_single, args=(index,)))
             singles[-1].start()
         for single in singles:
@@ -357,18 +359,12 @@ class Killer(MDApp):
     def kill_selected(self):
         with processes_lock:
             for pid in self.current_selection:
-                try:
-                    processes[pid].kill()
-                except AccessDenied:
-                    print(f"Process {pid} not killed >:(")
+                kill(processes[pid])
 
     def kill_selected_and_children(self):
         with processes_lock:
             for pid in self.current_selection:
-                gone, alive = kill_proc_tree(processes[pid])
-                if alive:
-                    fmt_alive = str([f'{p.pid}, ' for p in alive])
-                    print(f"Processes {fmt_alive} not killed >:(")
+                kill_proc_tree(processes[pid])
 
 
 class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior,
