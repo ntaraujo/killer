@@ -102,3 +102,5 @@ def kill(proc):
             proc.kill()
         except (NoSuchProcess, AccessDenied):
             print(f"Process {proc.pid} not killed >:(")
+    else:
+        print("kill myself?")
