@@ -66,6 +66,8 @@ class Main(Screen):
     visible_lock = Lock()
     keyfunc = reverse = order_by = None
     visible_range = (0, 0)
+    special_order_cells = dict()
+    corrected_special_order_cells = dict()
 
     @mainthread
     def del_cell(self, c):
@@ -97,7 +99,43 @@ class Main(Screen):
 
     @mainthread
     def del_cell_by_index(self, i):
-        del self.ids.rv.data[i]
+        if len(self.ids.rv.data) > i:
+            del self.ids.rv.data[i]
+
+    def new_special_order_cell(self, proc, proc_pid, proc_name, cpu, mem):
+        proc_cpu = proc_mem = "0.00%"
+
+        proc_exe = proc.info['exe']
+        proc_icon = icon_path(proc_exe, proc_name)
+
+        try:
+            with proc.oneshot():
+                if cpu:
+                    proc_cpu = f'{proc.cpu_percent(1):.2f}%'
+                if mem:
+                    proc_mem = f'{proc.memory_percent():.2f}%'
+        except NoSuchProcess:
+            print(f'NoSuchProcess {proc_pid} in Main.new_special_order_cell (1)')
+
+        cell = {"proc_pid": proc_pid,
+                "proc_icon": proc_icon,
+                "proc_name": proc_name,
+                "proc_cpu": proc_cpu,
+                "proc_mem": proc_mem}
+
+        self.special_order_cells[proc_pid] = cell
+
+    def correct_special_order_cell(self, proc, proc_pid, cell, cpu, mem):
+        try:
+            with proc.oneshot():
+                if cpu:
+                    cell["proc_cpu"] = f'{proc.cpu_percent(1):.2f}%'
+                if mem:
+                    cell["proc_mem"] = f'{proc.memory_percent():.2f}%'
+        except NoSuchProcess:
+            print(f'NoSuchProcess {proc_pid} in Main.special_order_update_data (2)')
+
+        self.corrected_special_order_cells[proc_pid] = cell
 
     def special_order_update_data(self):
         search = self.ids.search_field.text.lower()
@@ -105,8 +143,12 @@ class Main(Screen):
 
         cpu = self.order_by == "proc_cpu"
         mem = self.order_by == "proc_mem"
-        proc_cpu = proc_mem = "0.00%"
         pid_index = dict()
+
+        self.special_order_cells = dict()
+        singles = dict()
+        self.corrected_special_order_cells = dict()
+        corrected_singles = dict()
 
         self.data_lock.acquire()
         processes_lock.acquire()
@@ -129,46 +171,44 @@ class Main(Screen):
             search_compatible = not existing_search or in_existent_search
 
             if search_compatible:
+                singles[proc_pid] = proc, Thread(target=self.new_special_order_cell,
+                                                 args=(proc, proc_pid, proc_name, cpu, mem))
+                singles[proc_pid][1].start()
 
-                proc_exe = proc.info['exe']
-                proc_icon = icon_path(proc_exe, proc_name)
+        for proc_pid, (proc, single) in singles.items():
+            single.join()
 
-                try:
-                    with proc.oneshot():
-                        if cpu:
-                            proc_cpu = f'{proc.cpu_percent(1):.2f}%'
-                        if mem:
-                            proc_mem = f'{proc.memory_percent(1):.2f}%'
-                except NoSuchProcess:
-                    print(f'NoSuchProcess {proc_pid} in Main.special_order_update_data (1)')
+            existent_index = pid_index.get(proc_pid)
 
-                cell = {"proc_pid": proc_pid,
-                        "proc_icon": proc_icon,
-                        "proc_name": proc_name,
-                        "proc_cpu": proc_cpu,
-                        "proc_mem": proc_mem}
+            if existent_index is not None:
+                self.del_cell_by_index(existent_index)
+                del pid_index[proc_pid]
+                for p, i in pid_index.items():
+                    if i > existent_index:
+                        pid_index[p] -= 1
 
-                existent_index = pid_index.get(proc_pid)
+            cell = self.special_order_cells[proc_pid]
 
-                if existent_index is not None:
-                    self.del_cell_by_index(existent_index)
+            index = keyring_bisect_left(self.ids.rv.data, cell, self.keyfunc, self.reverse)
 
-                index = keyring_bisect_left(self.ids.rv.data, cell, self.keyfunc, self.reverse)
-
-                if index in self.visible_range:
-                    try:
-                        with proc.oneshot():
-                            if not cpu:
-                                cell["proc_cpu"] = f'{proc.cpu_percent(1):.2f}%'
-                            if not mem:
-                                cell["proc_mem"] = f'{proc.memory_percent():.2f}%'
-                    except NoSuchProcess:
-                        print(f'NoSuchProcess {proc_pid} in Main.special_order_update_data (2)')
-
+            if index in self.visible_range:
+                corrected_singles[proc_pid] = index, Thread(target=self.correct_special_order_cell,
+                                                            args=(proc, proc_pid, cell, not cpu, not mem))
+                corrected_singles[proc_pid][1].start()
+            else:
                 self.insert_cell(index, cell)
 
-                if self.ids.multiple_select.active and proc_pid not in app.current_selection:
+        for proc_pid, (index, single) in corrected_singles.items():
+            single.join()
+
+            self.insert_cell(index, self.corrected_special_order_cells[proc_pid])
+
+        if self.ids.multiple_select.active:
+            selected_ones = app.current_selection
+            for cell in self.ids.rv.data:
+                if cell["proc_pid"] not in selected_ones:
                     self.set_multiple_select(False)
+                    break
         processes_lock.release()
         self.data_lock.release()
 
