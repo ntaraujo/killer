@@ -53,14 +53,12 @@
             id: rv
             viewclass: 'ProcessCell'
 
-            SelectableRecycleBoxLayout:
+            RecycleBoxLayout:
                 default_size: None, dp(48)
                 default_size_hint: 1, None
                 size_hint_y: None
                 height: self.minimum_height
                 orientation: 'vertical'
-                multiselect: True
-                touch_multiselect: True
 
         MDBoxLayout:
             adaptive_height: True

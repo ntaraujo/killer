@@ -1,4 +1,3 @@
-from kivy.uix.recycleview import RecycleView
 from kivymd.uix.list import OneLineAvatarIconListItem
 from psutil import process_iter, NoSuchProcess, cpu_count, AccessDenied
 from kivymd.app import MDApp
@@ -11,11 +10,7 @@ from os.path import join as p_join
 from kivy.clock import mainthread
 from time import sleep
 from threading import Thread, Lock
-from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivymd.uix.boxlayout import MDBoxLayout
-from kivy.uix.recycleboxlayout import RecycleBoxLayout
-from kivy.uix.behaviors import FocusBehavior
-from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 from kivy.metrics import dp
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDRaisedButton
@@ -74,13 +69,6 @@ def timer(function):
             toe = tac - tic
         funcs_results[function] = toe
     return new_func
-
-
-"""sample_data = [{"proc_pid": r,
-                "proc_icon": icon_path('', 'default'),
-                "proc_name": f'Sample Process {r}',
-                "proc_cpu": '0.00%',
-                "proc_mem": '0.00%'} for r in range(20)]"""
 
 
 class Main(Screen):
@@ -427,51 +415,12 @@ class MiniProcessCell(OneLineAvatarIconListItem):
     little_font = NumericProperty(None)
 
 
-class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior,
-                                 RecycleBoxLayout):
-    """ Adds selection and focus behaviour to the view. """
-
-
-class CustomRecycleView(RecycleView):
-    multiple_select_lock = Lock()
-
-    def refresh_from_data(self, **kwargs):
-        Thread(target=self.check_selections).start()
-        return super().refresh_from_data(**kwargs)
-
-    def check_selections(self):
-        if not self.multiple_select_lock.locked():
-            self.multiple_select_lock.acquire()
-            for cell in self.data:
-                if cell['proc_pid'] not in app.current_selection:
-                    self.set_multiple_select(False)
-            self.multiple_select_lock.release()
-
-    @staticmethod
-    @mainthread
-    def set_multiple_select(active):
-        app.main.ids.multiple_select.active = active
-
-
-class ProcessCell(RecycleDataViewBehavior, MDBoxLayout):
-    """ Add selection support to the Cell """
+class ProcessCell(MDBoxLayout):
     proc_pid = StringProperty()
     proc_icon = StringProperty()
     proc_name = StringProperty()
     proc_cpu = StringProperty()
     proc_mem = StringProperty()
-
-    def refresh_view_attrs(self, rv, index, data):
-        """ Catch and handle the view changes """
-        return super().refresh_view_attrs(
-            rv, index, data)
-
-    def on_touch_down(self, touch):
-        """ Add selection on touch down """
-        return super().on_touch_down(touch)
-
-    def apply_selection(self, rv, index, is_selected):
-        """ Respond to the selection of items in the view. """
 
 
 if __name__ == '__main__':
