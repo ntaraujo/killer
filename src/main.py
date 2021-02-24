@@ -405,8 +405,7 @@ class Killer(MDApp):
                 fails.extend(kill_proc_tree(processes[pid]))
         self.show_fails(fails)
 
-    @staticmethod
-    def show_fails(fails):
+    def show_fails(self, fails):
         if len(fails) == 0:
             return
 
@@ -437,16 +436,15 @@ class Killer(MDApp):
             return
 
         title = f"Was not possible to kill the following process{'es' if len(items) > 2 else ''}:"
-        text = f"Please, run Killer as Administrator if you want to try again. " \
-               f"But even so, Windows can still stop you from doing it."
 
         fails_dialog = MDDialog(
             title=title,
-            text=text,
             items=items,
             type="simple",
             buttons=[MDRaisedButton(text="OK")]
         )
+
+        fails_dialog.ids.title.color = self.theme_cls.opposite_bg_normal
 
         fails_dialog.open()
 

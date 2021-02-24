@@ -43,17 +43,22 @@
                     size_hint: None, None
                     size: 32, 32
                     icon: "arrow-down"
+                    color: app.theme_cls.opposite_bg_normal
                     on_release: app.sort_by(app.sorted_by, "arrow-up" if self.icon == "arrow-down" else "arrow-down")
             LButton:
                 size_hint_x: None
                 width: "48dp"
                 text: "PID"
+                color: app.theme_cls.opposite_bg_normal
             LButton:
                 text: "Process Name"
+                color: app.theme_cls.opposite_bg_normal
             LButton:
                 text: "CPU Usage"
+                color: app.theme_cls.opposite_bg_normal
             LButton:
                 text: "Memory Usage"
+                color: app.theme_cls.opposite_bg_normal
 
         RecycleView:
             id: rv
@@ -106,14 +111,18 @@
         size_hint_x: None
         width: "48dp"
         text: root.proc_pid
+        color: app.theme_cls.opposite_bg_normal
     MDLabel:
         text: root.proc_name
+        color: app.theme_cls.opposite_bg_normal
     MDLabel:
         text: root.proc_cpu
         halign: "center"
+        color: app.theme_cls.opposite_bg_normal
     MDLabel:
         text: root.proc_mem
         halign: "center"
+        color: app.theme_cls.opposite_bg_normal
 
 <LButton@ButtonBehavior+MDLabel>
     sorted_by: self.text == app.sorted_by
@@ -127,6 +136,7 @@
     halign: "center"
 
 <IButton@ButtonBehavior+MDIcon>
+    color: app.theme_cls.opposite_bg_normal
 
 <MiniProcessCell>
     text: self.proc_name
@@ -142,9 +152,11 @@
         MDLabel:
             text: root.proc_pid
             halign: "center"
+            color: app.theme_cls.opposite_bg_normal
         MDLabel:
             text: root.proc_user
             halign: "center"
             font_size: root.little_font if root.little_font is not None else self.font_size
+            color: app.theme_cls.opposite_bg_normal
 
 <Container@IRightBodyTouch+MDBoxLayout>
