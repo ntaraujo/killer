@@ -39,18 +39,18 @@ def icon_path(exe: path_type, name: str):
             DestroyIcon(small[0])
 
         hdc = CreateDCFromHandle(GetDC(0))
-        hbmp = CreateBitmap()
-        hbmp.CreateCompatibleBitmap(hdc, ico_x, ico_x)
+        h_bmp = CreateBitmap()
+        h_bmp.CreateCompatibleBitmap(hdc, ico_x, ico_x)
         hdc = hdc.CreateCompatibleDC()
 
-        hdc.SelectObject(hbmp)
+        hdc.SelectObject(h_bmp)
         hdc.DrawIcon((0, 0), large[0])
 
-        bmpstr = hbmp.GetBitmapBits(True)
+        bmp_str = h_bmp.GetBitmapBits(True)
         img = Image.frombuffer(
             'RGBA',
             (32, 32),
-            bmpstr, 'raw', 'BGRA', 0, 1
+            bmp_str, 'raw', 'BGRA', 0, 1
         )
 
         img.save(id_path)
@@ -66,9 +66,9 @@ def is_responding(pid: int):
     return str(pid) in str(status)
 
 
-def keyring_bisect_left(seq, item, keyfunc, reverse=False):
-    k = keyfunc(item)
-    keys = [keyfunc(e) for e in seq]
+def keyring_bisect_left(seq, item, key_func, reverse=False):
+    k = key_func(item)
+    keys = [key_func(e) for e in seq]
     return ordering_bisect_left(keys, k, reverse)
 
 

@@ -75,50 +75,25 @@ class Main(Screen):
     data_lock = Lock()
     reverse = False
     order_by = "proc_pid"
-    visible_range = (0, 0)
+    visible_range = range(0)
     special_order_cells = list()
     order_cells = list()
 
     def __init__(self, **kw):
-        self.keyfunc = self.keyfunc
+        self.key_func = self.key_func
         super().__init__(**kw)
 
     @staticmethod
-    def keyfunc(c):
+    def key_func(c):
         return float(c["proc_pid"].replace('%', ''))
-
-    @mainthread
-    def del_cell(self, c):
-        try:
-            self.ids.rv.data.remove(c)
-        except ValueError:
-            print('ValueError in Main.del_cell')
-
-    @mainthread
-    def add_cell(self, c):
-        self.ids.rv.data.append(c)
-
-    @mainthread
-    def insert_cell(self, i, c):
-        self.ids.rv.data.insert(i, c)
 
     @mainthread
     def assign_data(self, data):
         self.ids.rv.data = data
 
     @mainthread
-    def update_cell(self, i, c):
-        if len(self.ids.rv.data) > i:
-            self.ids.rv.data[i] = c
-
-    @mainthread
     def set_multiple_select(self, active):
         self.ids.multiple_select.active = active
-
-    @mainthread
-    def del_cell_by_index(self, i):
-        if len(self.ids.rv.data) > i:
-            del self.ids.rv.data[i]
 
     def new_special_order_cell(self, proc, proc_pid, proc_name, cpu, mem):
         proc_cpu = proc_mem = "0.00%"
@@ -189,7 +164,7 @@ class Main(Screen):
             single.join()
 
         self.special_order_cells: List[Dict[str, str]] = \
-            sorted(self.special_order_cells, key=self.keyfunc, reverse=self.reverse)
+            sorted(self.special_order_cells, key=self.key_func, reverse=self.reverse)
         data_max = len(self.special_order_cells)
 
         for index in self.visible_range:
@@ -250,7 +225,7 @@ class Main(Screen):
                 if self.ids.multiple_select.active and proc_pid not in app.current_selection:
                     self.set_multiple_select(False)
 
-        self.order_cells = sorted(self.order_cells, key=self.keyfunc, reverse=self.reverse)
+        self.order_cells = sorted(self.order_cells, key=self.key_func, reverse=self.reverse)
         data_max = len(self.order_cells)
 
         for index in self.visible_range:
@@ -274,13 +249,13 @@ class Main(Screen):
                 self.order_update_data()
 
     def order(self, order_by, reverse):
-        def keyfunc(c):
+        def key_func(c):
             if order_by == "proc_name":
                 return c[order_by].lower()
             else:
                 return float(c[order_by].replace('%', ''))
 
-        self.keyfunc = keyfunc
+        self.key_func = key_func
         self.reverse = reverse
         self.order_by = order_by
 
@@ -429,4 +404,4 @@ if __name__ == '__main__':
     app.run()
 
     for func, result in funcs_results.items():
-        print(f'Function {func.__qualname__} is tooking about {result:.5f} seconds.')
+        print(f'Function {func.__qualname__} is taking about {result:.5f} seconds.')
