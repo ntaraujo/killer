@@ -49,16 +49,12 @@
                 size_hint_x: None
                 width: "48dp"
                 text: "PID"
-                color: app.theme_cls.opposite_bg_normal
             LButton:
                 text: "Process Name"
-                color: app.theme_cls.opposite_bg_normal
             LButton:
                 text: "CPU Usage"
-                color: app.theme_cls.opposite_bg_normal
             LButton:
                 text: "Memory Usage"
-                color: app.theme_cls.opposite_bg_normal
 
         RecycleView:
             id: rv
@@ -134,6 +130,7 @@
             size: self.size
     on_release: app.sort_by(self.text, app.main.ids.order.icon)
     halign: "center"
+    color: (1, 1, 1, 1) if self.sorted_by else app.theme_cls.opposite_bg_normal
 
 <IButton@ButtonBehavior+MDIcon>
     color: app.theme_cls.opposite_bg_normal
