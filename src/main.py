@@ -322,12 +322,11 @@ class Main(Screen):
     def answerers_control(self):
         self.answer_lock.acquire()
         while len(self.answerers) == 0:
-            print("Waiting for first internal answerer")
+            pass
         while len(self.answerers) != 0:
             self.answerers[0][1].wait()
             self.answerers[0][0].join()
             del self.answerers[0]
-            print(f"Answered. Now {len(self.answerers)} answerers.")
         self.answered = True
         self.answer_lock.release()
 
