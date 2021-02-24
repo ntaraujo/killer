@@ -3,7 +3,7 @@ from kivymd.uix.list import OneLineAvatarIconListItem
 from psutil import process_iter, NoSuchProcess, cpu_count, AccessDenied
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
-from src.utils import icon_path, keyring_bisect_left, kill_proc_tree, kill
+from src.utils import icon_path, kill_proc_tree, kill
 from kivy.properties import StringProperty, ListProperty, NumericProperty
 from kivy.lang import Builder
 from os.path import dirname, abspath
@@ -19,6 +19,8 @@ from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 from kivy.metrics import dp
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDRaisedButton
+from time import perf_counter
+from typing import Dict, List
 
 processes = dict()
 processes_lock = Lock()
@@ -57,6 +59,23 @@ def always_updating_processes():
         sleep(1)
 
 
+funcs_results = dict()
+
+
+def timer(function):
+    def new_func(*args, **kwargs):
+        tic = perf_counter()
+        function(*args, **kwargs)
+        tac = perf_counter()
+        print(f'Function {function.__qualname__} done')
+        if function in funcs_results:
+            toe = (tac - tic + funcs_results[function]) / 2
+        else:
+            toe = tac - tic
+        funcs_results[function] = toe
+    return new_func
+
+
 """sample_data = [{"proc_pid": r,
                 "proc_icon": icon_path('', 'default'),
                 "proc_name": f'Sample Process {r}',
@@ -66,9 +85,19 @@ def always_updating_processes():
 
 class Main(Screen):
     data_lock = Lock()
-    keyfunc = reverse = order_by = None
+    reverse = False
+    order_by = "proc_pid"
     visible_range = (0, 0)
     special_order_cells = list()
+    order_cells = list()
+
+    def __init__(self, **kw):
+        self.keyfunc = self.keyfunc
+        super().__init__(**kw)
+
+    @staticmethod
+    def keyfunc(c):
+        return float(c["proc_pid"].replace('%', ''))
 
     @mainthread
     def del_cell(self, c):
@@ -171,7 +200,8 @@ class Main(Screen):
         for single in singles:
             single.join()
 
-        self.special_order_cells = sorted(self.special_order_cells, key=self.keyfunc, reverse=self.reverse)
+        self.special_order_cells: List[Dict[str, str]] = \
+            sorted(self.special_order_cells, key=self.keyfunc, reverse=self.reverse)
         data_max = len(self.special_order_cells)
 
         for index in self.visible_range:
@@ -187,32 +217,38 @@ class Main(Screen):
         with self.data_lock:
             self.assign_data(self.special_order_cells)
 
-    def update_data(self):
+    def correct_order_cell(self, index, cpu=True, mem=True):
+        cell = self.order_cells[index]
+        proc_pid = cell['proc_pid']
+        proc = processes[proc_pid]
+        try:
+            with proc.oneshot():
+                if cpu:
+                    cell["proc_cpu"] = f'{proc.cpu_percent(0.5) / cpus:.2f}%'
+                if mem:
+                    cell["proc_mem"] = f'{proc.memory_percent():.2f}%'
+        except NoSuchProcess:
+            print(f'NoSuchProcess {proc_pid} in Main.correct_order_cell')
+        finally:
+            self.order_cells[index] = cell
+
+    def order_update_data(self):
         search = self.ids.search_field.text.lower()
         existing_search = search != ''
 
-        self.data_lock.acquire()
-        for cell in self.ids.rv.data:
-            existent_process = cell['proc_pid'] in processes
-            in_existent_search = existing_search and search in cell['proc_pid'] + cell['proc_name'].lower()
-            search_compatible = not existing_search or in_existent_search
-
-            if not existent_process or not search_compatible:
-                self.del_cell(cell)
-
-        existing_pids = [c['proc_pid'] for c in self.ids.rv.data]
+        self.order_cells = list()
+        correct_singles = list()
 
         processes_lock.acquire()
+
         for proc_pid, proc in processes.items():
+            proc_name = proc.info["name"]
 
-            proc_name = proc.info['name']
-
-            in_data = proc_pid in existing_pids
             in_existent_search = existing_search and search in proc_pid + proc_name.lower()
             search_compatible = not existing_search or in_existent_search
 
-            if not in_data and search_compatible:
-                proc_exe = proc.info['exe']
+            if search_compatible:
+                proc_exe = proc.info["exe"]
                 proc_icon = icon_path(proc_exe, proc_name)
 
                 cell = {"proc_pid": proc_pid,
@@ -221,25 +257,33 @@ class Main(Screen):
                         "proc_cpu": "0.00%",
                         "proc_mem": "0.00%"}
 
-                if self.order_by is not None:
-                    index = keyring_bisect_left(self.ids.rv.data, cell, self.keyfunc, self.reverse)
-                    self.insert_cell(index, cell)
-                else:
-                    self.add_cell(cell)
+                self.order_cells.append(cell)
 
                 if self.ids.multiple_select.active and proc_pid not in app.current_selection:
                     self.set_multiple_select(False)
+
+        self.order_cells = sorted(self.order_cells, key=self.keyfunc, reverse=self.reverse)
+        data_max = len(self.order_cells)
+
+        for index in self.visible_range:
+            if index >= data_max:
+                break
+            correct_singles.append(Thread(target=self.correct_order_cell, args=(index, True, True)))
+            correct_singles[-1].start()
+        for single in correct_singles:
+            single.join()
+
         processes_lock.release()
-        self.data_lock.release()
-        if self.order_by is None:
-            self.order("proc_pid", False)
+
+        with self.data_lock:
+            self.assign_data(self.order_cells)
 
     def always_updating_data(self):
         while True:
             if self.order_by in ("proc_cpu", "proc_mem"):
                 self.special_order_update_data()
             else:
-                self.update_data()
+                self.order_update_data()
 
     def order(self, order_by, reverse):
         def keyfunc(c):
@@ -251,9 +295,6 @@ class Main(Screen):
         self.keyfunc = keyfunc
         self.reverse = reverse
         self.order_by = order_by
-        with self.data_lock:
-            temp_data = sorted(self.ids.rv.data, key=keyfunc, reverse=reverse)
-            self.assign_data(temp_data)
 
     def set_visible_range(self):
         top_pos = self.ids.rv.to_local(self.ids.rv.center_x, self.ids.rv.height)
@@ -267,40 +308,6 @@ class Main(Screen):
         while True:
             self.set_visible_range()
             sleep(0.1)
-
-    def update_visible(self):
-        singles = []
-        self.data_lock.acquire()
-        for index in self.visible_range:
-            if index >= len(self.ids.rv.data):
-                break
-            singles.append(Thread(target=self.update_single, args=(index,)))
-            singles[-1].start()
-        for single in singles:
-            single.join()
-        self.data_lock.release()
-
-    def update_single(self, index, cpu=True, mem=True):
-        new_cell = self.ids.rv.data[index].copy()
-        pid = new_cell['proc_pid']
-        proc = processes.get(pid)
-        if proc is None:
-            return
-        try:
-            with proc.oneshot():
-                if cpu:
-                    new_cell["proc_cpu"] = f'{proc.cpu_percent(1) / cpus:.2f}%'
-                if mem:
-                    new_cell["proc_mem"] = f'{proc.memory_percent():.2f}%'
-        except NoSuchProcess:
-            print(f"NoSuchProcess {pid} in Main.update_single")
-        finally:
-            self.update_cell(index, new_cell)
-
-    def always_updating_visible(self):
-        while True:
-            if self.order_by not in ("proc_mem", "proc_cpu"):
-                self.update_visible()
 
 
 class Killer(MDApp):
@@ -318,8 +325,6 @@ class Killer(MDApp):
         Thread(target=always_updating_processes, daemon=True).start()
         Thread(target=self.main.always_updating_data, daemon=True).start()
         Thread(target=self.main.always_setting_visible_range, daemon=True).start()
-        Thread(target=self.main.always_updating_visible, daemon=True).start()
-        # Clock.schedule_interval(self.main.set_processes_list, 1)
 
     def select_row(self, pid, active):
         if active and pid not in self.current_selection:
@@ -350,7 +355,6 @@ class Killer(MDApp):
         else:
             key = "proc_cpu"
         desc = True if order == "arrow-up" else False
-        print(f'Ordering by {key} in {"de" if desc else "a"}scendent order')
         Thread(target=self.main.order, args=(key, desc), daemon=True).start()
 
     def kill_selected(self):
@@ -474,3 +478,6 @@ if __name__ == '__main__':
     update_processes()
     app = Killer()
     app.run()
+
+    for func, result in funcs_results.items():
+        print(f'Function {func.__qualname__} is tooking about {result:.5f} seconds.')
