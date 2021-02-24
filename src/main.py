@@ -180,12 +180,7 @@ class Main(Screen):
 
         processes_lock.release()
 
-        if not self.answer_lock.locked():
-            if not self.answered and not self.ordered:
-                with self.data_lock:
-                    self.assign_data(self.special_order_cells)
-            else:
-                self.answered = self.ordered = False
+        self.update_data_base(self.special_order_cells)
 
     def correct_order_cell(self, index, cpu=True, mem=True):
         cell = self.order_cells[index]
@@ -245,10 +240,13 @@ class Main(Screen):
 
         processes_lock.release()
 
+        self.update_data_base(self.order_cells)
+
+    def update_data_base(self, new_data):
         if not self.answer_lock.locked():
             if not self.answered and not self.ordered:
                 with self.data_lock:
-                    self.assign_data(self.order_cells)
+                    self.assign_data(new_data)
             else:
                 self.answered = self.ordered = False
 
