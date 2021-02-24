@@ -1,9 +1,10 @@
 from kivy.uix.recycleview import RecycleView
-from psutil import process_iter, NoSuchProcess, cpu_count
+from kivymd.uix.list import OneLineAvatarIconListItem
+from psutil import process_iter, NoSuchProcess, cpu_count, AccessDenied
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
 from src.utils import icon_path, keyring_bisect_left, kill_proc_tree, kill
-from kivy.properties import StringProperty, ListProperty
+from kivy.properties import StringProperty, ListProperty, NumericProperty
 from kivy.lang import Builder
 from os.path import dirname, abspath
 from os.path import join as p_join
@@ -15,6 +16,9 @@ from kivymd.uix.boxlayout import MDBoxLayout
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.recycleview.layout import LayoutSelectionBehavior
+from kivy.metrics import dp
+from kivymd.uix.dialog import MDDialog
+from kivymd.uix.button import MDRaisedButton
 
 processes = dict()
 processes_lock = Lock()
@@ -350,14 +354,73 @@ class Killer(MDApp):
         Thread(target=self.main.order, args=(key, desc), daemon=True).start()
 
     def kill_selected(self):
+        fails = list()
         with processes_lock:
             for pid in self.current_selection:
-                kill(processes[pid])
+                proc = processes[pid]
+                if not kill(proc):
+                    fails.append(proc)
+        self.show_fails(fails)
 
     def kill_selected_and_children(self):
+        fails = list()
         with processes_lock:
             for pid in self.current_selection:
-                kill_proc_tree(processes[pid])
+                fails.extend(kill_proc_tree(processes[pid]))
+        self.show_fails(fails)
+
+    @staticmethod
+    def show_fails(fails):
+        if len(fails) == 0:
+            return
+
+        items = list()
+
+        cell = MiniProcessCell()
+        cell.proc_name = "Process Name"
+        cell.proc_pid = "PID"
+        cell.proc_user = "Owner"
+        items.append(cell)
+
+        for proc in fails:
+            cell = MiniProcessCell()
+            cell.proc_name = proc.info["name"]
+            cell.proc_icon = icon_path('', cell.proc_name)
+            cell.proc_pid = str(proc.info["pid"])
+            cell.little_font = dp(10)
+            try:
+                cell.proc_user = proc.username()
+            except AccessDenied:
+                pass
+            except NoSuchProcess:
+                continue
+            finally:
+                items.append(cell)
+
+        if len(items) == 1:
+            return
+
+        title = f"Was not possible to kill the following process{'es' if len(items) > 2 else ''}:"
+        text = f"Please, run Killer as Administrator if you want to try again. " \
+               f"But even so, Windows can still stop you from doing it."
+
+        fails_dialog = MDDialog(
+            title=title,
+            text=text,
+            items=items,
+            type="simple",
+            buttons=[MDRaisedButton(text="OK")]
+        )
+
+        fails_dialog.open()
+
+
+class MiniProcessCell(OneLineAvatarIconListItem):
+    proc_pid = StringProperty()
+    proc_icon = StringProperty()
+    proc_name = StringProperty()
+    proc_user = StringProperty()
+    little_font = NumericProperty(None)
 
 
 class SelectableRecycleBoxLayout(FocusBehavior, LayoutSelectionBehavior,

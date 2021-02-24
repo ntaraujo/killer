@@ -123,3 +123,24 @@
     halign: "center"
 
 <IButton@ButtonBehavior+MDIcon>
+
+<MiniProcessCell>
+    text: self.proc_name
+    on_size:
+        self.ids._right_container.width = container.width
+        self.ids._right_container.x = container.width
+    IconLeftWidget:
+        size_hint: None, None
+        size: 32, 32
+        icon: root.proc_icon
+    Container:
+        id: container
+        MDLabel:
+            text: root.proc_pid
+            halign: "center"
+        MDLabel:
+            text: root.proc_user
+            halign: "center"
+            font_size: root.little_font if root.little_font is not None else self.font_size
+
+<Container@IRightBodyTouch+MDBoxLayout>

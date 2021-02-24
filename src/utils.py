@@ -83,6 +83,7 @@ def ordering_bisect_left(seq, e, reverse, lo=None, hi=None):
 
 
 def kill_proc_tree(parent, include_parent=True):
+    fails = list()
     try:
         children = parent.children(recursive=True)
     except NoSuchProcess:
@@ -90,14 +91,19 @@ def kill_proc_tree(parent, include_parent=True):
     if include_parent:
         children.append(parent)
     for p in children:
-        kill(p)
+        if not kill(p):
+            fails.append(p)
+    return fails
 
 
 def kill(proc):
     if proc.pid != this_pid:
         try:
             proc.kill()
-        except (NoSuchProcess, AccessDenied):
-            print(f"Process {proc.pid} not killed >:(")
+            return True
+        except NoSuchProcess:
+            return True
+        except AccessDenied:
+            return False
     else:
-        print("kill myself? bruh")
+        return False
