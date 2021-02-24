@@ -19,6 +19,11 @@
                 id: search_field
                 hint_text: 'Search process'
                 on_text: root.fast_answer(self.text)
+            MDIconButton:
+                icon: 'moon-waxing-crescent'
+                on_release:
+                    app.theme_cls.theme_style = "Dark" if self.icon == 'moon-waxing-crescent' else "Light"
+                    self.icon = 'white-balance-sunny' if self.icon == 'moon-waxing-crescent' else 'moon-waxing-crescent'
 
         MDBoxLayout:
             adaptive_height: True
