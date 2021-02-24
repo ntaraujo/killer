@@ -12,16 +12,17 @@ from os import PathLike, getpid
 from typing import Union
 from pywintypes import error # noqa
 from bisect import bisect_left, bisect_right
+import sys
 
-this_dir = dirname(abspath(__file__))
+this_dir = getattr(sys, '_MEIPASS', abspath(dirname(__file__)))
 this_pid = getpid()
 path_type = Union[str, bytes, PathLike]
-default_icon_path = p_join(this_dir, '../icons', 'default.png')
+default_icon_path = p_join(this_dir, 'icons', 'default.png')
 
 
 def icon_path(exe: path_type, name: str):
     id_file_name = f'{name}.png'
-    id_path = p_join(this_dir, '../icons', id_file_name)
+    id_path = p_join(this_dir, 'icons', id_file_name)
 
     if not p_exists(id_path):
 

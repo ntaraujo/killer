@@ -2,7 +2,6 @@ from kivymd.uix.list import OneLineAvatarIconListItem
 from psutil import process_iter, NoSuchProcess, cpu_count, AccessDenied
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
-from src.utils import icon_path, kill_proc_tree, kill
 from kivy.properties import StringProperty, ListProperty, NumericProperty
 from kivy.lang import Builder
 from os.path import dirname, abspath
@@ -16,11 +15,13 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDRaisedButton
 from time import perf_counter
 from typing import Dict, List
+import sys
+from utils import icon_path, kill_proc_tree, kill # noqa
 
 processes = dict()
 processes_lock = Lock()
 
-this_dir = dirname(abspath(__file__))
+this_dir = getattr(sys, '_MEIPASS', abspath(dirname(__file__)))
 Builder.load_file(p_join(this_dir, 'main.kv'))
 
 cpus = cpu_count()
@@ -344,6 +345,7 @@ class Killer(MDApp):
     sorted_by = StringProperty("PID")
 
     def __init__(self, **kwargs):
+        self.icon = p_join(this_dir, 'icons\\Killer.exe.png')
         super().__init__(**kwargs)
         self.main = Main()
 
