@@ -99,16 +99,16 @@ class Main(Screen):
         self.ids.multiple_select.active = active
 
     def new_special_order_cell(self, proc, proc_pid, proc_name, cpu, mem):
-        proc_cpu = proc_mem = "0.00%"
+        proc_cpu = proc_mem = "0.0000%"
 
         proc_exe = proc.info['exe']
         proc_icon = icon_path(proc_exe, proc_name)
 
         try:
             if cpu:
-                proc_cpu = f'{proc.cpu_percent(1) / cpus:.2f}%'
+                proc_cpu = f'{proc.cpu_percent(1) / cpus:.4f}%'
             if mem:
-                proc_mem = f'{proc.memory_percent():.2f}%'
+                proc_mem = f'{proc.memory_percent():.4f}%'
         except NoSuchProcess:
             print(f'NoSuchProcess {proc_pid} in Main.new_special_order_cell')
 
@@ -126,9 +126,9 @@ class Main(Screen):
         proc = processes[proc_pid]
         try:
             if cpu:
-                cell["proc_cpu"] = f'{proc.cpu_percent(1) / cpus:.2f}%'
+                cell["proc_cpu"] = f'{proc.cpu_percent(1) / cpus:.4f}%'
             if mem:
-                cell["proc_mem"] = f'{proc.memory_percent():.2f}%'
+                cell["proc_mem"] = f'{proc.memory_percent():.4f}%'
         except NoSuchProcess:
             print(f'NoSuchProcess {proc_pid} in Main.correct_special_order_cell')
         finally:
@@ -194,9 +194,9 @@ class Main(Screen):
         try:
             with proc.oneshot():
                 if cpu:
-                    cell["proc_cpu"] = f'{proc.cpu_percent(1) / cpus:.2f}%'
+                    cell["proc_cpu"] = f'{proc.cpu_percent(1) / cpus:.4f}%'
                 if mem:
-                    cell["proc_mem"] = f'{proc.memory_percent():.2f}%'
+                    cell["proc_mem"] = f'{proc.memory_percent():.4f}%'
         except NoSuchProcess:
             print(f'NoSuchProcess {proc_pid} in Main.correct_order_cell')
         finally:
@@ -224,8 +224,8 @@ class Main(Screen):
                 cell = {"proc_pid": proc_pid,
                         "proc_icon": proc_icon,
                         "proc_name": proc_name,
-                        "proc_cpu": "0.00%",
-                        "proc_mem": "0.00%"}
+                        "proc_cpu": "0.0000%",
+                        "proc_mem": "0.0000%"}
 
                 self.order_cells.append(cell)
 
