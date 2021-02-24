@@ -74,7 +74,7 @@ def timer(function):
 class Main(Screen):
     data_lock = Lock()
     answer_lock = Lock()
-    answered = False
+    answered = ordered = False
     reverse = False
     order_by = "proc_pid"
     visible_range = range(0)
@@ -181,11 +181,11 @@ class Main(Screen):
         processes_lock.release()
 
         if not self.answer_lock.locked():
-            if not self.answered:
+            if not self.answered and not self.ordered:
                 with self.data_lock:
                     self.assign_data(self.special_order_cells)
             else:
-                self.answered = False
+                self.answered = self.ordered = False
 
     def correct_order_cell(self, index, cpu=True, mem=True):
         cell = self.order_cells[index]
@@ -246,11 +246,11 @@ class Main(Screen):
         processes_lock.release()
 
         if not self.answer_lock.locked():
-            if not self.answered:
+            if not self.answered and not self.ordered:
                 with self.data_lock:
                     self.assign_data(self.order_cells)
             else:
-                self.answered = False
+                self.answered = self.ordered = False
 
     def always_updating_data(self):
         while True:
@@ -269,6 +269,13 @@ class Main(Screen):
         self.key_func = key_func
         self.reverse = reverse
         self.order_by = order_by
+
+        if order_by not in ("proc_cpu", "proc_mem"):
+            self.ordered = True
+            with self.data_lock:
+                temp_data = sorted(self.ids.rv.data, key=key_func, reverse=reverse)
+                self.assign_data(temp_data)
+            self.ordered = True
 
     def set_visible_range(self):
         top_pos = self.ids.rv.to_local(self.ids.rv.center_x, self.ids.rv.height)
