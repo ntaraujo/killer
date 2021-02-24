@@ -242,6 +242,28 @@ class Main(Screen):
 
         self.update_data_base(self.order_cells)
 
+    def first_update_data(self):
+        order_cells = list()
+
+        processes_lock.acquire()
+        for proc_pid, proc in processes.items():
+            proc_name = proc.info["name"]
+            proc_exe = proc.info["exe"]
+            proc_icon = icon_path(proc_exe, proc_name)
+
+            cell = {"proc_pid": proc_pid,
+                    "proc_icon": proc_icon,
+                    "proc_name": proc_name,
+                    "proc_cpu": "0.0000%",
+                    "proc_mem": "0.0000%"}
+
+            order_cells.append(cell)
+        processes_lock.release()
+
+        order_cells = sorted(order_cells, key=self.key_func, reverse=self.reverse)
+
+        self.assign_data(order_cells)
+
     def update_data_base(self, new_data):
         if not self.answer_lock.locked():
             if not self.answered and not self.ordered:
@@ -331,6 +353,7 @@ class Killer(MDApp):
 
     def on_start(self):
         Thread(target=always_updating_processes, daemon=True).start()
+        self.main.first_update_data()
         Thread(target=self.main.always_updating_data, daemon=True).start()
         Thread(target=self.main.always_setting_visible_range, daemon=True).start()
 
