@@ -9,7 +9,7 @@ from os.path import dirname, abspath
 from os.path import join as p_join
 from kivy.clock import mainthread
 from time import sleep
-from threading import Thread, Lock
+from threading import Thread, Lock, Event
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivy.metrics import dp
 from kivymd.uix.dialog import MDDialog
@@ -73,11 +73,14 @@ def timer(function):
 
 class Main(Screen):
     data_lock = Lock()
+    answer_lock = Lock()
+    answered = False
     reverse = False
     order_by = "proc_pid"
     visible_range = range(0)
     special_order_cells = list()
     order_cells = list()
+    answerers = list()
 
     def __init__(self, **kw):
         self.key_func = self.key_func
@@ -177,8 +180,12 @@ class Main(Screen):
 
         processes_lock.release()
 
-        with self.data_lock:
-            self.assign_data(self.special_order_cells)
+        if not self.answer_lock.locked():
+            if not self.answered:
+                with self.data_lock:
+                    self.assign_data(self.special_order_cells)
+            else:
+                self.answered = False
 
     def correct_order_cell(self, index, cpu=True, mem=True):
         cell = self.order_cells[index]
@@ -187,7 +194,7 @@ class Main(Screen):
         try:
             with proc.oneshot():
                 if cpu:
-                    cell["proc_cpu"] = f'{proc.cpu_percent(0.5) / cpus:.2f}%'
+                    cell["proc_cpu"] = f'{proc.cpu_percent(1) / cpus:.2f}%'
                 if mem:
                     cell["proc_mem"] = f'{proc.memory_percent():.2f}%'
         except NoSuchProcess:
@@ -238,8 +245,12 @@ class Main(Screen):
 
         processes_lock.release()
 
-        with self.data_lock:
-            self.assign_data(self.order_cells)
+        if not self.answer_lock.locked():
+            if not self.answered:
+                with self.data_lock:
+                    self.assign_data(self.order_cells)
+            else:
+                self.answered = False
 
     def always_updating_data(self):
         while True:
@@ -271,6 +282,35 @@ class Main(Screen):
         while True:
             self.set_visible_range()
             sleep(0.1)
+
+    def fast_answer(self, search):
+        if search == "":
+            return
+        if not self.answer_lock.locked():
+            Thread(target=self.answerers_control).start()
+        self.answerers.append([Thread(target=self.fast_answer_base, args=(search,)), Event()])
+        self.answerers[-1][0].start()
+        self.answerers[-1][1].set()
+
+    def answerers_control(self):
+        self.answer_lock.acquire()
+        while len(self.answerers) == 0:
+            print("Waiting for first internal answerer")
+        while len(self.answerers) != 0:
+            self.answerers[0][1].wait()
+            self.answerers[0][0].join()
+            del self.answerers[0]
+            print(f"Answered. Now {len(self.answerers)} answerers.")
+        self.answered = True
+        self.answer_lock.release()
+
+    def fast_answer_base(self, search):
+        temp_data = list()
+        for cell in self.ids.rv.data:
+            search_compatible = search.lower() in cell["proc_pid"] + cell["proc_name"]
+            if search_compatible:
+                temp_data.append(cell)
+        self.assign_data(temp_data)
 
 
 class Killer(MDApp):
