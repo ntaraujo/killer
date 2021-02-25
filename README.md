@@ -13,13 +13,15 @@ Tired of trying to kill processes with the default Windows Task Manager? Selecti
 
 ![Dark Mode](https://github.com/ntaraujo/killer/blob/main/data/samples/dark.PNG)
 
-Killer is an app with concise design which displays the processes for you, let search between them, order by pid/name/cpu/memory
+Killer is an app with concise design which displays the processes, let search between them, order by pid/name/cpu/memory
 and kill multiple apps (or even all) at once. Besides that, you can also kill the children of the selected process(es),
 which means, all the other processes created by these (no survival chance)
 
 ![Search and select all](https://github.com/ntaraujo/killer/blob/main/data/samples/search.PNG)
 
 Any issue or improvement suggestion can be sent in the [issues tab](https://github.com/ntaraujo/killer/issues)
+
+More features coming
 
 ## ⬆️Update
 
