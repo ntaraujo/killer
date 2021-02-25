@@ -19,6 +19,8 @@ which means, all the other processes created by these (no survival chance)
 
 ![Search and select all](https://github.com/ntaraujo/killer/blob/main/data/samples/search.PNG)
 
+Tip: If you allow the creation of a desktop icon during the installation, "Ctrl+Shift+K" will open the Killer
+
 Any issue or improvement suggestion can be sent in the [issues tab](https://github.com/ntaraujo/killer/issues)
 
 More features coming
