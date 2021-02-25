@@ -82,6 +82,7 @@ class Main(Screen):
     special_order_cells = list()
     order_cells = list()
     answerers = list()
+    last_search = None
 
     def __init__(self, **kw):
         self.key_func = self.key_func
@@ -231,6 +232,10 @@ class Main(Screen):
         self.order_cells = sorted(self.order_cells, key=self.key_func, reverse=self.reverse)
         data_max = len(self.order_cells)
 
+        if self.last_search is not None and len(self.ids.search_field.text) < len(self.last_search):
+            self.update_data_base(self.order_cells)
+            self.last_search = None
+
         for index in self.visible_range:
             if index >= data_max:
                 break
@@ -338,6 +343,7 @@ class Main(Screen):
             if search_compatible:
                 temp_data.append(cell)
         self.assign_data(temp_data)
+        self.last_search = search
 
 
 class Killer(MDApp):
