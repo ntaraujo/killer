@@ -28,6 +28,6 @@ More features coming
 For updating this app, just download [the newest release](https://github.com/ntaraujo/killer/releases/latest/download/killer-setup.exe)
 and follow with the installation to the same folder used before.
 
-## 🔧 Developers
+## 🔧 Contributing
 
-Details on how to contribute to this project [here](https://github.com/ntaraujo/killer/blob/master/DEVELOP.md).
+Details on how to contribute to this project [here](https://github.com/ntaraujo/killer/blob/master/CONTRIBUTING.md).
