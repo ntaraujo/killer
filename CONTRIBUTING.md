@@ -36,13 +36,13 @@ If it works, you are ready for making changes to the source code.
 
 # About the current used tools
 
-1. [Python](https://www.python.org): A programming language for work quickly
+1. [Python](https://www.python.org): A programming language to work quickly
 2. [Kivy](https://kivy.org): A cross-platform Python framework for NUI development
 3. [KivyMD](https://kivymd.readthedocs.io): A collection of material design compliant widgets for use with Kivy
 4. [Psutil](https://psutil.readthedocs.io): A cross-platform library for retrieving information on running processes and system utilization in Python
 5. [Pillow](https://pillow.readthedocs.io): The Python imaging library
 6. [pywin32](https://github.com/mhammond/pywin32): Python extensions for Windows
-7. [PyInstaller](https://www.pyinstaller.org): Bundles Python application and all its dependencies into a single package
+7. [PyInstaller](https://www.pyinstaller.org): Bundles Python applications and all its dependencies into a single package
 8. [Inno Setup](https://jrsoftware.org/isinfo.php): A free installer for Windows programs
 
 # About the current files
