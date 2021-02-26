@@ -334,7 +334,7 @@ class Main(Screen):
     def fast_answer_base(self, search):
         temp_data = list()
         for cell in self.ids.rv.data:
-            search_compatible = search.lower() in cell["proc_pid"] + cell["proc_name"]
+            search_compatible = search.lower() in cell["proc_pid"] + cell["proc_name"].lower()
             if search_compatible:
                 temp_data.append(cell)
         self.assign_data(temp_data)
