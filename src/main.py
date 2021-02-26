@@ -13,7 +13,6 @@ from kivymd.uix.boxlayout import MDBoxLayout
 from kivy.metrics import dp
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDRaisedButton
-from time import perf_counter
 from typing import Dict, List
 import sys
 from utils import icon_path, kill_proc_tree, kill # noqa
@@ -53,23 +52,6 @@ def always_updating_processes():
     while True:
         update_processes()
         sleep(1)
-
-
-funcs_results = dict()
-
-
-def timer(function):
-    def new_func(*args, **kwargs):
-        tic = perf_counter()
-        function(*args, **kwargs)
-        tac = perf_counter()
-        print(f'Function {function.__qualname__} done')
-        if function in funcs_results:
-            toe = (tac - tic + funcs_results[function]) / 2
-        else:
-            toe = tac - tic
-        funcs_results[function] = toe
-    return new_func
 
 
 class Main(Screen):
@@ -475,6 +457,3 @@ if __name__ == '__main__':
     update_processes()
     app = Killer()
     app.run()
-
-    for func, result in funcs_results.items():
-        print(f'Function {func.__qualname__} is taking about {result:.5f} seconds.')

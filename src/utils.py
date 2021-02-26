@@ -13,6 +13,7 @@ from typing import Union
 from pywintypes import error # noqa
 from bisect import bisect_left, bisect_right
 import sys
+from time import perf_counter
 
 this_dir = getattr(sys, '_MEIPASS', abspath(dirname(__file__)))
 this_pid = getpid()
@@ -108,3 +109,25 @@ def kill(proc):
             return False
     else:
         return False
+
+
+funcs_results = dict()
+
+
+def timer(function):
+    def new_func(*args, **kwargs):
+        tic = perf_counter()
+        function(*args, **kwargs)
+        tac = perf_counter()
+        print(f'Function {function.__qualname__} done')
+        if function in funcs_results:
+            toe = (tac - tic + funcs_results[function]) / 2
+        else:
+            toe = tac - tic
+        funcs_results[function] = toe
+    return new_func
+
+
+def timer_results():
+    for func, result in funcs_results.items():
+        print(f'Function {func.__qualname__} is taking about {result:.5f} seconds.')
