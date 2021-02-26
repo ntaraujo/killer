@@ -354,10 +354,10 @@ class Killer(MDApp):
         return self.main
 
     def on_start(self):
-        Thread(target=always_updating_processes, daemon=True).start()
         self.main.first_update_data()
         Thread(target=self.main.always_updating_data, daemon=True).start()
         Thread(target=self.main.always_setting_visible_range, daemon=True).start()
+        Thread(target=always_updating_processes, daemon=True).start()
 
     def select_row(self, pid, active):
         if active and pid not in self.current_selection:
