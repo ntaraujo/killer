@@ -29,16 +29,8 @@ cpus = cpu_count()
 def update_processes():
     global processes
     temp_processes = dict()
-    alive = False
     for proc in process_iter(['pid', 'name', 'exe']):
         temp_processes[str(proc.info['pid'])] = proc
-
-        if proc.info['name'] == "Killer.exe":
-            if alive:
-                from os import _exit # noqa
-                _exit(0)
-            else:
-                alive = True
 
     processes_lock.acquire()
     for pid in list(processes):
@@ -54,6 +46,19 @@ def update_processes():
         elif pid != "0":
             processes[pid] = proc
     processes_lock.release()
+
+
+def first_update_processes():
+    global processes
+    alive = False
+    for proc in process_iter(['pid', 'name', 'exe']):
+        processes[str(proc.info['pid'])] = proc
+
+        if proc.info['name'] == "Killer.exe":
+            if alive:
+                sys.exit()
+            else:
+                alive = True
 
 
 def always_updating_processes():
@@ -349,6 +354,7 @@ class Killer(MDApp):
         return self.main
 
     def on_start(self):
+        Thread(target=always_updating_processes, daemon=True).start()
         self.main.first_update_data()
         Thread(target=self.main.always_updating_data, daemon=True).start()
         Thread(target=self.main.always_setting_visible_range, daemon=True).start()
@@ -461,6 +467,6 @@ class ProcessCell(MDBoxLayout):
 
 
 if __name__ == '__main__':
-    Thread(target=always_updating_processes, daemon=True).start()
+    first_update_processes()
     app = Killer()
     app.run()
