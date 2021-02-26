@@ -75,7 +75,10 @@
             MDIconButton:
                 icon: "arrow-down-drop-circle-outline"
                 on_release: rv.scroll_y = 0
-            BoxLayout
+            MDLabel:
+                fmt_selection: "Selected: {} ".format(", ".join(sorted(app.current_selection, key=lambda x: int(x))))
+                text: self.fmt_selection if self.fmt_selection != "Selected:  " else ""
+                shorten: True
             MDBoxLayout:
                 adaptive_width: True
                 spacing: "10dp"
