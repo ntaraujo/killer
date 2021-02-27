@@ -82,6 +82,7 @@
                 fmt_selection: "Selected: {} ".format("; ".join(app.selection_strings))
                 text: self.fmt_selection if self.fmt_selection != "Selected:  " else ""
                 shorten: True
+                shorten_from: "left"
                 split_str: "; "
                 color: app.theme_cls.opposite_bg_normal
             MDBoxLayout:
