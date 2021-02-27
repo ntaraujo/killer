@@ -2,7 +2,7 @@ from kivymd.uix.list import OneLineAvatarIconListItem
 from psutil import process_iter, NoSuchProcess, cpu_count, AccessDenied
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
-from kivy.properties import StringProperty, ListProperty, NumericProperty
+from kivy.properties import StringProperty, ListProperty, NumericProperty, DictProperty
 from kivy.lang import Builder
 from os.path import dirname, abspath
 from os.path import join as p_join
@@ -16,6 +16,7 @@ from kivymd.uix.button import MDRaisedButton
 from typing import Dict, List
 import sys
 from utils import icon_path, kill_proc_tree, kill # noqa
+from re import search as re_search
 
 processes = dict()
 processes_lock = Lock()
@@ -339,6 +340,8 @@ class Killer(MDApp):
     current_selection = ListProperty()
     sorted_by = StringProperty("PID")
     selection_lock = Lock()
+    # Dict[str, Set[int]]  what to display and the related pids
+    selection_strings = DictProperty()
 
     def __init__(self, **kwargs):
         self.icon = p_join(this_dir, 'icons\\Killer.exe.png')
@@ -374,20 +377,60 @@ class Killer(MDApp):
             sleep(1)
 
     def select_row(self, pid, active):
+        unique_string = "process " + pid
+        int_pid = int(pid)
         if active and pid not in self.current_selection:
             self.current_selection.append(pid)
+            changed = False
+            for general_string, related_pids in list(self.selection_strings.items()):
+                if re_search(f'(but)(.*)( {pid})(?![0-9])', general_string):  # *but*pid*
+                    del self.selection_strings[general_string]
+                    related_pids.add(int_pid)
+                    # the pid is the first of more than one exceptions
+                    new_general_string = general_string.replace(f" {pid} and", "")
+                    # the pid is the last of more than one exceptions or the only one
+                    new_general_string = new_general_string.replace(f" and {pid}", "").replace(f" but {pid}", "")
+                    self.selection_strings[new_general_string] = related_pids
+                    changed = True
+                    break
+            if not changed:
+                self.selection_strings[unique_string] = {int_pid}
         elif not active and pid in self.current_selection:
             self.current_selection.remove(pid)
+            if unique_string in self.selection_strings:
+                del self.selection_strings[unique_string]
+            else:
+                for general_string, related_pids in list(self.selection_strings.items()):
+                    if int_pid in related_pids:
+                        del self.selection_strings[general_string]
+                        related_pids.remove(int_pid)
+                        if not related_pids:  # if the set is empty do not create a new entry
+                            pass
+                        elif "but" in general_string:
+                            self.selection_strings[f"{general_string} and {pid}"] = related_pids
+                        else:
+                            self.selection_strings[f"{general_string} but {pid}"] = related_pids
+                        break
 
     def select_rows(self, active):
         self.main.data_lock.acquire()
         if active:
+            new_pids = set()
             for cell in self.main.ids.rv.data:
                 pid = cell['proc_pid']
                 if pid not in self.current_selection:
                     self.current_selection.append(pid)
+                    new_pids.add(int(pid))
+            search = self.main.ids.search_field.text
+            for general_string, related_pids in list(self.selection_strings.items()):
+                # if the search which bring the new pids already exists or a more specific was made
+                if re_search(f'(?<=all with ")(.*)({search})', general_string) or not search:  # all with "*search*
+                    del self.selection_strings[general_string]
+            unique_string = "all" if not search else f'all with "{search}"'
+            self.selection_strings[unique_string] = new_pids
         else:
             self.current_selection = list()
+            self.selection_strings = dict()
         self.main.data_lock.release()
 
     def sort_by(self, data_type, order):
