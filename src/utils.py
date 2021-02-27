@@ -119,15 +119,10 @@ def timer(function):
         tic = perf_counter()
         function(*args, **kwargs)
         tac = perf_counter()
-        print(f'Function {function.__qualname__} done')
         if function in funcs_results:
             toe = (tac - tic + funcs_results[function]) / 2
         else:
             toe = tac - tic
         funcs_results[function] = toe
+        print(f'Function {function.__qualname__} is taking about {toe:.5f} seconds.')
     return new_func
-
-
-def timer_results():
-    for func, result in funcs_results.items():
-        print(f'Function {func.__qualname__} is taking about {result:.5f} seconds.')
