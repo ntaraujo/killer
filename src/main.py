@@ -157,9 +157,6 @@ class Main(Screen):
                                       args=(proc, proc_pid, proc_name, cpu, mem)))
                 singles[-1].start()
 
-                if self.ids.multiple_select.active and proc_pid not in app.current_selection:
-                    self.set_multiple_select(False)
-
         for single in singles:
             single.join()
 
@@ -220,9 +217,6 @@ class Main(Screen):
                         "proc_mem": "0.0000%"}
 
                 self.order_cells.append(cell)
-
-                if self.ids.multiple_select.active and proc_pid not in app.current_selection:
-                    self.set_multiple_select(False)
 
         self.order_cells = sorted(self.order_cells, key=self.key_func, reverse=self.reverse)
         data_max = len(self.order_cells)
@@ -344,6 +338,7 @@ class Main(Screen):
 class Killer(MDApp):
     current_selection = ListProperty()
     sorted_by = StringProperty("PID")
+    selection_lock = Lock()
 
     def __init__(self, **kwargs):
         self.icon = p_join(this_dir, 'icons\\Killer.exe.png')
@@ -358,6 +353,25 @@ class Killer(MDApp):
         Thread(target=self.main.always_updating_data, daemon=True).start()
         Thread(target=self.main.always_setting_visible_range, daemon=True).start()
         Thread(target=always_updating_processes, daemon=True).start()
+        Thread(target=self.always_selecting, daemon=True).start()
+
+    def always_selecting(self):
+        while True:
+            if len(self.main.ids.rv.data) == 0:
+                self.main.set_multiple_select(False)
+                continue
+
+            state = True
+            self.selection_lock.acquire()
+            self.main.data_lock.acquire()
+            for cell in self.main.ids.rv.data:
+                if cell["proc_pid"] not in self.current_selection:
+                    state = False
+                    break
+            self.main.data_lock.release()
+            self.main.set_multiple_select(state)
+            self.selection_lock.release()
+            sleep(1)
 
     def select_row(self, pid, active):
         if active and pid not in self.current_selection:

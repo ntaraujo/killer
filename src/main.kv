@@ -32,7 +32,10 @@
                 size_hint: None, None
                 size: "48dp", "48dp"
                 pos_hint: {'center_x': .5, 'center_y': .5}
-                on_release: app.select_rows(self.active)
+                on_press: app.selection_lock.acquire()
+                on_release:
+                    app.select_rows(self.active)
+                    app.selection_lock.release()
             AnchorLayout:
                 anchor_x: "center"
                 anchor_y: "center"
