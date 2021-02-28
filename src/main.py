@@ -2,7 +2,7 @@ from kivymd.uix.list import OneLineAvatarIconListItem
 from psutil import process_iter, NoSuchProcess, cpu_count, AccessDenied
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
-from kivy.properties import StringProperty, ListProperty, NumericProperty, DictProperty
+from kivy.properties import StringProperty, ListProperty, NumericProperty
 from kivy.lang import Builder
 from os.path import dirname, abspath
 from os.path import join as p_join
@@ -16,7 +16,6 @@ from kivymd.uix.button import MDRaisedButton
 from typing import Dict, List
 import sys
 from utils import icon_path, kill_proc_tree, kill # noqa
-from re import search as re_search
 
 processes = dict()
 processes_lock = Lock()
@@ -294,12 +293,14 @@ class Main(Screen):
             self.ordered = True
 
     def set_visible_range(self):
-        top_pos = self.ids.rv.to_local(self.ids.rv.center_x, self.ids.rv.height)
-        top_i = self.ids.rv.layout_manager.get_view_index_at(top_pos)
-        bottom_pos = self.ids.rv.to_local(self.ids.rv.center_x, 0)
-        bottom_i = self.ids.rv.layout_manager.get_view_index_at(bottom_pos)
-
-        self.visible_range = range(top_i, bottom_i + 1)
+        try:
+            top_pos = self.ids.rv.to_local(self.ids.rv.center_x, self.ids.rv.height)
+            top_i = self.ids.rv.layout_manager.get_view_index_at(top_pos)
+            bottom_pos = self.ids.rv.to_local(self.ids.rv.center_x, 0)
+            bottom_i = self.ids.rv.layout_manager.get_view_index_at(bottom_pos)
+            self.visible_range = range(top_i, bottom_i + 1)
+        except TypeError:
+            pass  # random kivy error
 
     def always_setting_visible_range(self):
         while True:
@@ -340,8 +341,8 @@ class Killer(MDApp):
     current_selection = ListProperty()
     sorted_by = StringProperty("PID")
     selection_lock = Lock()
-    # Dict[str, Set[int]]  what to display and the related pids
-    selection_strings = DictProperty()
+    # List[List[Union[str, bool, Set[str], Set[str]]]]
+    selection_control = list()
 
     def __init__(self, **kwargs):
         self.icon = p_join(this_dir, 'icons\\Killer.exe.png')
@@ -362,6 +363,7 @@ class Killer(MDApp):
         while True:
             if len(self.main.ids.rv.data) == 0:
                 self.main.set_multiple_select(False)
+                sleep(1)
                 continue
 
             state = True
@@ -376,62 +378,90 @@ class Killer(MDApp):
             self.selection_lock.release()
             sleep(1)
 
+    def update_selection_label(self):
+        selection_strings = list()
+        # _search: what was when general checkbox was clicked, or empty if it wasn't clicked
+        # _check: if general checkbox was clicked
+        # _added: related PIDs
+        # _removed: related PIDs but unmarked
+        for _search, _check, _added, _removed in self.selection_control:
+            if _check:
+                if _search:
+                    selection_string = f'all with "{_search}"'
+                else:
+                    selection_string = 'all'
+                if _removed:
+                    selection_string += ' but ' + ' and '.join(_removed)
+            else:
+                one_pid = "X"
+                for one_pid in _added:
+                    # one_pid now is one value of _added, should be the only one as _check == False
+                    break
+                selection_string = f'process {one_pid}'
+            selection_strings.append(selection_string)
+
+        if selection_strings:
+            self.main.ids.selection_label.text = f'Selected: {"; ".join(selection_strings)} '
+        else:
+            self.main.ids.selection_label.text = ''
+
     def select_row(self, pid, active):
-        unique_string = "process " + pid
-        int_pid = int(pid)
         if active and pid not in self.current_selection:
             self.current_selection.append(pid)
-            changed = False
-            for general_string, related_pids in list(self.selection_strings.items()):
-                if re_search(f'(but)(.*)( {pid})(?![0-9])', general_string):  # *but*pid*
-                    del self.selection_strings[general_string]
-                    related_pids.add(int_pid)
-                    # the pid is the first of more than one exceptions
-                    new_general_string = general_string.replace(f" {pid} and", "")
-                    # the pid is the last of more than one exceptions or the only one
-                    new_general_string = new_general_string.replace(f" and {pid}", "").replace(f" but {pid}", "")
-                    self.selection_strings[new_general_string] = related_pids
-                    changed = True
+
+            for _search, _check, _added, _removed in self.selection_control:
+                if pid in _removed:
+                    # pid was related to a search before and was unmarked, now its being remarked
+                    _removed.remove(pid)
                     break
-            if not changed:
-                self.selection_strings[unique_string] = {int_pid}
+            else:  # no break, pid was not related to a previous search
+                self.selection_control.append(["", False, {pid}, set()])  # _search is "" bcs doesn't matter
+            self.update_selection_label()
         elif not active and pid in self.current_selection:
             self.current_selection.remove(pid)
-            if unique_string in self.selection_strings:
-                del self.selection_strings[unique_string]
-            else:
-                for general_string, related_pids in list(self.selection_strings.items()):
-                    if int_pid in related_pids:
-                        del self.selection_strings[general_string]
-                        related_pids.remove(int_pid)
-                        if not related_pids:  # if the set is empty do not create a new entry
-                            pass
-                        elif "but" in general_string:
-                            self.selection_strings[f"{general_string} and {pid}"] = related_pids
-                        else:
-                            self.selection_strings[f"{general_string} but {pid}"] = related_pids
-                        break
+
+            for _search, _check, _added, _removed in self.selection_control.copy():
+                if pid in _added:
+                    _removed.add(pid)
+                    if not _added - _removed:
+                        # all related PIDs were unmarked, doesn't matter _check
+                        # the set _removed is still linked bcs its not a deepcopy so:
+                        self.selection_control.remove([_search, _check, _added, _removed])
+                    break
+            self.update_selection_label()
 
     def select_rows(self, active):
-        self.main.data_lock.acquire()
         if active:
-            new_pids = set()
+            pids = set()
+            self.main.data_lock.acquire()
             for cell in self.main.ids.rv.data:
                 pid = cell['proc_pid']
                 if pid not in self.current_selection:
                     self.current_selection.append(pid)
-                    new_pids.add(int(pid))
+                    pids.add(pid)
+            self.main.data_lock.release()
+
             search = self.main.ids.search_field.text
-            for general_string, related_pids in list(self.selection_strings.items()):
-                # if the search which bring the new pids already exists or a more specific was made
-                if re_search(f'(?<=all with ")(.*)({search})', general_string) or not search:  # all with "*search*
-                    del self.selection_strings[general_string]
-            unique_string = "all" if not search else f'all with "{search}"'
-            self.selection_strings[unique_string] = new_pids
+            need_to_add = True
+            for _search, _check, _added, _removed in self.selection_control.copy():
+                if not search or (_check and search in _search):
+                    # selected all or selected a group which includes all _added bcs _search was more specific
+                    self.selection_control.remove([_search, _check, _added, _removed])
+                elif _removed:
+                    # if there are exceptions
+                    for pid in pids:
+                        if pid in _removed:
+                            # if marked pid was in these exceptions
+                            _removed.remove(pid)
+                if _check and _search in search:
+                    # if a previous search was less specific than now, it includes all PIDs, no need to be redundant
+                    need_to_add = False
+            if need_to_add:
+                self.selection_control.append([search, True, pids, set()])
         else:
             self.current_selection = list()
-            self.selection_strings = dict()
-        self.main.data_lock.release()
+            self.selection_control = list()
+        self.update_selection_label()
 
     def sort_by(self, data_type, order):
         self.sorted_by = data_type

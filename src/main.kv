@@ -79,8 +79,7 @@
                 icon: "arrow-down-drop-circle-outline"
                 on_release: rv.scroll_y = 0
             MDLabel:
-                fmt_selection: "Selected: {} ".format("; ".join(app.selection_strings))
-                text: self.fmt_selection if self.fmt_selection != "Selected:  " else ""
+                id: selection_label
                 shorten: True
                 shorten_from: "left"
                 split_str: "; "
