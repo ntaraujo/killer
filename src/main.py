@@ -6,7 +6,7 @@ from kivy.properties import StringProperty, ListProperty, NumericProperty
 from kivy.lang import Builder
 from os.path import dirname, abspath
 from os.path import join as p_join
-from kivy.clock import mainthread
+from kivy.clock import mainthread, Clock
 from time import sleep
 from threading import Thread, Lock, Event
 from kivymd.uix.boxlayout import MDBoxLayout
@@ -354,10 +354,14 @@ class Killer(MDApp):
 
     def on_start(self):
         self.main.first_update_data()
+        Clock.schedule_once(self.search_focus)
         Thread(target=self.main.always_updating_data, daemon=True).start()
         Thread(target=self.main.always_setting_visible_range, daemon=True).start()
         Thread(target=always_updating_processes, daemon=True).start()
         Thread(target=self.always_selecting, daemon=True).start()
+
+    def search_focus(self, *args):
+        self.main.ids.search_field.focus = True
 
     def always_selecting(self):
         while True:
