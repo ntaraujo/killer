@@ -380,18 +380,20 @@ class Killer(MDApp):
 
     def update_selection_label(self):
         selection_strings = list()
-        # _search: what was when general checkbox was clicked, or empty if it wasn't clicked
+        # _search: what was the search when general checkbox was clicked, or empty if it wasn't clicked
         # _check: if general checkbox was clicked
         # _added: related PIDs
         # _removed: related PIDs but unmarked
+        exceptions = list()
         for _search, _check, _added, _removed in self.selection_control:
             if _check:
                 if _search:
                     selection_string = f'all with "{_search}"'
                 else:
                     selection_string = 'all'
-                if _removed:
-                    selection_string += ' but ' + ' and '.join(_removed)
+                for pid in _removed:
+                    if pid not in exceptions:
+                        exceptions.append(pid)
             else:
                 one_pid = "X"
                 for one_pid in _added:
@@ -399,6 +401,14 @@ class Killer(MDApp):
                     break
                 selection_string = f'process {one_pid}'
             selection_strings.append(selection_string)
+
+        exceptions_amount = len(exceptions)
+        if exceptions_amount:
+            exception_string = f'except {"process" if exceptions_amount == 1 else "processes"} '
+            exception_string += ', '.join(exceptions)
+            last_exception = exceptions[-1]
+            exception_string = exception_string.replace(f', {last_exception}', f' and {last_exception}')
+            selection_strings.append(exception_string)
 
         if selection_strings:
             self.main.ids.selection_label.text = f'Selected: {"; ".join(selection_strings)} '
@@ -409,12 +419,13 @@ class Killer(MDApp):
         if active and pid not in self.current_selection:
             self.current_selection.append(pid)
 
+            changed = False
             for _search, _check, _added, _removed in self.selection_control:
                 if pid in _removed:
                     # pid was related to a search before and was unmarked, now its being remarked
                     _removed.remove(pid)
-                    break
-            else:  # no break, pid was not related to a previous search
+                    changed = True
+            if not changed:  # pid was not related to a previous search
                 self.selection_control.append(["", False, {pid}, set()])  # _search is "" bcs doesn't matter
             self.update_selection_label()
         elif not active and pid in self.current_selection:
@@ -425,9 +436,8 @@ class Killer(MDApp):
                     _removed.add(pid)
                     if not _added - _removed:
                         # all related PIDs were unmarked, doesn't matter _check
-                        # the set _removed is still linked bcs its not a deepcopy so:
+                        # the set _removed is still linked bcs there wasn't a deepcopy, so:
                         self.selection_control.remove([_search, _check, _added, _removed])
-                    break
             self.update_selection_label()
 
     def select_rows(self, active):
@@ -444,17 +454,21 @@ class Killer(MDApp):
             search = self.main.ids.search_field.text
             need_to_add = True
             for _search, _check, _added, _removed in self.selection_control.copy():
-                if not search or (_check and search in _search):
+                iter_removed = False
+                if _check and (not search or search in _search):
                     # selected all or selected a group which includes all _added bcs _search was more specific
+                    # or as specific as
                     self.selection_control.remove([_search, _check, _added, _removed])
+                    iter_removed = True
                 elif _removed:
                     # if there are exceptions
                     for pid in pids:
                         if pid in _removed:
                             # if marked pid was in these exceptions
                             _removed.remove(pid)
-                if _check and _search in search:
-                    # if a previous search was less specific than now, it includes all PIDs, no need to be redundant
+                if _check and _search in search and not iter_removed:
+                    # if a previous search was less specific than, or as specific as now,
+                    # and was not excluded, it includes all PIDs and there is no need to be redundant
                     need_to_add = False
             if need_to_add:
                 self.selection_control.append([search, True, pids, set()])
