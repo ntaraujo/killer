@@ -360,8 +360,8 @@ class Killer(MDApp):
         Thread(target=always_updating_processes, daemon=True).start()
         Thread(target=self.always_selecting, daemon=True).start()
 
-    def search_focus(self, *args):
-        self.main.ids.search_field.focus = True
+    def search_focus(*args):
+        args[0].main.ids.search_field.focus = True
 
     def always_selecting(self):
         while True:
