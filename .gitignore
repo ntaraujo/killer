@@ -1,7 +1,6 @@
-teste.py
-draw.py
-.idea
-InnoSetup
+test/
+.idea/
+InnoSetup/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
