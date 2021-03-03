@@ -477,20 +477,8 @@ class Killer(MDApp):
             if need_to_add:
                 self.selection_control.append([search, True, pids, set()])
         else:
-            search = self.main.ids.search_field.text
-
-            if search:
-                pids = set()
-                self.main.data_lock.acquire()
-                for cell in self.main.ids.rv.data:
-                    pid = cell['proc_pid']
-                    if pid in self.current_selection:
-                        self.current_selection.remove(pid)
-                        pids.add(pid)
-                self.main.data_lock.release()
-            else:
-                self.current_selection.clear()
-                self.selection_control.clear()
+            self.current_selection.clear()
+            self.selection_control.clear()
         self.update_selection_label()
 
     def sort_by(self, data_type, order):
