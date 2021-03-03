@@ -452,27 +452,28 @@ class Killer(MDApp):
                 pid = cell['proc_pid']
                 if pid not in self.current_selection:
                     self.current_selection.append(pid)
-                    pids.add(pid)
+                pids.add(pid)
             self.main.data_lock.release()
 
             search = self.main.ids.search_field.text
             need_to_add = True
             for _search, _check, _added, _removed in self.selection_control.copy():
-                iter_removed = False
-                if _check and (not search or search in _search):
-                    # selected all or selected a group which includes all _added bcs _search was more specific
-                    # or as specific as
+                # selected all
+                # selected a group which includes all _added bcs _search was more specific or as specific as
+                surely_include_all = not search or (_check and search in _search)
+                # selected a pid lonely selected before
+                iter_include_all = surely_include_all or (not _check and not _added.difference(pids))
+                if iter_include_all:
                     self.selection_control.remove([_search, _check, _added, _removed])
-                    iter_removed = True
                 elif _removed:
-                    # if there are exceptions
+                    # if there was exceptions
                     for pid in pids:
                         if pid in _removed:
-                            # if marked pid was in these exceptions
+                            # if a marked pid was in these exceptions
                             _removed.remove(pid)
-                if _check and _search in search and not iter_removed:
+                if _check and _search in search and not iter_include_all:
                     # if a previous search was less specific than, or as specific as now,
-                    # and was not excluded, it includes all PIDs and there is no need to be redundant
+                    # and was not removed, it includes all PIDs and there is no need to be redundant
                     need_to_add = False
             if need_to_add:
                 self.selection_control.append([search, True, pids, set()])
