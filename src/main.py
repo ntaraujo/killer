@@ -138,7 +138,7 @@ class Main(Screen):
         cpu = self.order_by == "proc_cpu"
         mem = self.order_by == "proc_mem"
 
-        self.special_order_cells.clear()
+        self.special_order_cells = []
         singles = []
         correct_singles = []
 
@@ -195,7 +195,7 @@ class Main(Screen):
         search = self.ids.search_field.text.lower()
         existing_search = search != ''
 
-        self.order_cells.clear()
+        self.order_cells = []
         correct_singles = []
 
         processes_lock.acquire()
@@ -477,8 +477,8 @@ class Killer(MDApp):
             if need_to_add:
                 self.selection_control.append([search, True, pids, set()])
         else:
-            self.current_selection.clear()
-            self.selection_control.clear()
+            self.current_selection = []
+            self.selection_control = []
         self.update_selection_label()
 
     def sort_by(self, data_type, order):
