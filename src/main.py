@@ -17,7 +17,7 @@ from typing import Dict, List
 import sys
 from utils import icon_path, kill_proc_tree, kill # noqa
 
-processes = dict()
+processes = {}
 processes_lock = Lock()
 
 this_dir = getattr(sys, '_MEIPASS', abspath(dirname(__file__)))
@@ -28,7 +28,7 @@ cpus = cpu_count()
 
 def update_processes():
     global processes
-    temp_processes = dict()
+    temp_processes = {}
     for proc in process_iter(['pid', 'name', 'exe']):
         temp_processes[str(proc.info['pid'])] = proc
 
@@ -74,9 +74,9 @@ class Main(Screen):
     reverse = False
     order_by = "proc_pid"
     visible_range = range(0)
-    special_order_cells = list()
-    order_cells = list()
-    answerers = list()
+    special_order_cells = []
+    order_cells = []
+    answerers = []
     last_search = None
 
     def __init__(self, **kw):
@@ -138,9 +138,9 @@ class Main(Screen):
         cpu = self.order_by == "proc_cpu"
         mem = self.order_by == "proc_mem"
 
-        self.special_order_cells = list()
-        singles = list()
-        correct_singles = list()
+        self.special_order_cells.clear()
+        singles = []
+        correct_singles = []
 
         processes_lock.acquire()
 
@@ -195,8 +195,8 @@ class Main(Screen):
         search = self.ids.search_field.text.lower()
         existing_search = search != ''
 
-        self.order_cells = list()
-        correct_singles = list()
+        self.order_cells.clear()
+        correct_singles = []
 
         processes_lock.acquire()
 
@@ -238,7 +238,7 @@ class Main(Screen):
         self.update_data_base(self.order_cells)
 
     def first_update_data(self):
-        order_cells = list()
+        order_cells = []
 
         processes_lock.acquire()
         for proc_pid, proc in processes.items():
@@ -328,7 +328,7 @@ class Main(Screen):
         self.answer_lock.release()
 
     def fast_answer_base(self, search):
-        temp_data = list()
+        temp_data = []
         for cell in self.ids.rv.data:
             search_compatible = search.lower() in cell["proc_pid"] + cell["proc_name"].lower()
             if search_compatible:
@@ -342,7 +342,7 @@ class Killer(MDApp):
     sorted_by = StringProperty("PID")
     selection_lock = Lock()
     # List[List[Union[str, bool, Set[str], Set[str]]]]
-    selection_control = list()
+    selection_control = []
 
     def __init__(self, **kwargs):
         self.icon = p_join(this_dir, 'icons\\Killer.exe.png')
@@ -383,12 +383,12 @@ class Killer(MDApp):
             sleep(1)
 
     def update_selection_label(self):
-        selection_strings = list()
+        selection_strings = []
         # _search: what was the search when general checkbox was clicked, or empty if it wasn't clicked
         # _check: if general checkbox was clicked
         # _added: related PIDs
         # _removed: related PIDs but unmarked
-        exceptions = list()
+        exceptions = []
         for _search, _check, _added, _removed in self.selection_control:
             if _check:
                 if _search:
@@ -477,8 +477,20 @@ class Killer(MDApp):
             if need_to_add:
                 self.selection_control.append([search, True, pids, set()])
         else:
-            self.current_selection = list()
-            self.selection_control = list()
+            search = self.main.ids.search_field.text
+
+            if search:
+                pids = set()
+                self.main.data_lock.acquire()
+                for cell in self.main.ids.rv.data:
+                    pid = cell['proc_pid']
+                    if pid in self.current_selection:
+                        self.current_selection.remove(pid)
+                        pids.add(pid)
+                self.main.data_lock.release()
+            else:
+                self.current_selection.clear()
+                self.selection_control.clear()
         self.update_selection_label()
 
     def sort_by(self, data_type, order):
@@ -496,7 +508,7 @@ class Killer(MDApp):
         Thread(target=self.main.order, args=(key, desc), daemon=True).start()
 
     def kill_selected(self):
-        fails = list()
+        fails = []
         with processes_lock:
             for pid in self.current_selection:
                 proc = processes[pid]
@@ -505,7 +517,7 @@ class Killer(MDApp):
         self.show_fails(fails)
 
     def kill_selected_and_children(self):
-        fails = list()
+        fails = []
         with processes_lock:
             for pid in self.current_selection:
                 fails.extend(kill_proc_tree(processes[pid]))
@@ -515,7 +527,7 @@ class Killer(MDApp):
         if len(fails) == 0:
             return
 
-        items = list()
+        items = []
 
         cell = MiniProcessCell()
         cell.proc_name = "Process Name"

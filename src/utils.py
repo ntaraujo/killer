@@ -85,11 +85,11 @@ def ordering_bisect_left(seq: Collection, e, reverse: bool, lo: Optional[int] = 
 
 
 def kill_proc_tree(parent: Type[Process], include_parent=True):
-    fails = list()
+    fails = []
     try:
         children = parent.children(recursive=True)
     except NoSuchProcess:
-        children = list()
+        children = []
     if include_parent:
         children.append(parent)
     for p in children:
@@ -111,8 +111,8 @@ def kill(proc: Type[Process]):
         return False
 
 
-funcs_results: Dict[Callable[[Any], Any], float] = dict()
-custom_results: Dict[str, List[Optional[Union[float, int]]]] = dict()
+funcs_results: Dict[Callable[[Any], Any], float] = {}
+custom_results: Dict[str, List[Optional[Union[float, int]]]] = {}
 
 
 def timer(function: Union[Callable[[Any], Any], str]) -> Optional[Callable[[Any], Any]]:
