@@ -384,35 +384,57 @@ class Killer(MDApp):
 
     def update_selection_label(self):
         selection_strings = []
+        lonely_ones = []
+        searches = []
+        exceptions = []
         # _search: what was the search when general checkbox was clicked, or empty if it wasn't clicked
         # _check: if general checkbox was clicked
         # _added: related PIDs
         # _removed: related PIDs but unmarked
-        exceptions = []
         for _search, _check, _added, _removed in self.selection_control:
             if _check:
-                if _search:
-                    selection_string = f'all with "{_search}"'
-                else:
-                    selection_string = 'all'
+                searches.append(_search)
                 for pid in _removed:
                     if pid not in exceptions:
                         exceptions.append(pid)
             else:
-                one_pid = "X"
                 for one_pid in _added:
-                    # one_pid now is one value of _added, should be the only one as _check == False
-                    break
-                selection_string = f'process {one_pid}'
-            selection_strings.append(selection_string)
+                    lonely_ones.append(one_pid)
+
+        lonely_ones_amount = len(lonely_ones)
+        if lonely_ones_amount:
+            lonely_ones = sorted(lonely_ones, key=lambda x: int(x))
+            last_lonely = lonely_ones[-1]
+            if lonely_ones_amount == 1:
+                selection_strings.append(f'process {last_lonely}')
+            else:
+                lonely_string = "processes " + ', '.join(lonely_ones)
+                lonely_string = lonely_string.replace(f', {last_lonely}', f' and {last_lonely}')
+                selection_strings.append(lonely_string)
+
+        searches_amount = len(searches)
+        if searches_amount:
+            searches = sorted(searches)
+            last_search = searches[-1]
+            if searches_amount == 1:
+                if last_search == "":
+                    selection_strings.append("all")
+                else:
+                    selection_strings.append(f'all with "{last_search}"')
+            else:
+                search_string = 'all with "{}"'.format('" or "'.join(searches))
+                selection_strings.append(search_string)
 
         exceptions_amount = len(exceptions)
         if exceptions_amount:
-            exception_string = f'except {"process" if exceptions_amount == 1 else "processes"} '
-            exception_string += ', '.join(exceptions)
+            exceptions = sorted(exceptions, key=lambda x: int(x))
             last_exception = exceptions[-1]
-            exception_string = exception_string.replace(f', {last_exception}', f' and {last_exception}')
-            selection_strings.append(exception_string)
+            if exceptions_amount == 1:
+                selection_strings.append(f"except process {last_exception}")
+            else:
+                exception_string = 'except processes ' + ', '.join(exceptions)
+                exception_string = exception_string.replace(f', {last_exception}', f' and {last_exception}')
+                selection_strings.append(exception_string)
 
         if selection_strings:
             self.main.ids.selection_label.text = f'Selected: {"; ".join(selection_strings)} '
