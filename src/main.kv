@@ -62,7 +62,7 @@
             viewclass: 'ProcessCell'
 
             RecycleBoxLayout:
-                default_size: None, dp(48)
+                default_size: None, app.proc_height
                 default_size_hint: 1, None
                 size_hint_y: None
                 height: self.minimum_height
@@ -95,7 +95,7 @@
     adaptive_height: True
     MDCheckbox:
         size_hint: None, None
-        size: "48dp", "48dp"
+        size: "48dp", app.proc_height
         pos_hint: {'center_x': .5, 'center_y': .5}
         active: root.proc_pid in app.current_selection
         on_active: app.select_row(root.proc_pid, self.active)
@@ -103,7 +103,7 @@
         anchor_x: "center"
         anchor_y: "center"
         size_hint: None, None
-        size: 50, 50
+        size: 50, app.proc_height
         MDIcon:
             size_hint: None, None
             size: 32, 32
@@ -113,17 +113,21 @@
         width: "48dp"
         text: root.proc_pid
         color: app.theme_cls.opposite_bg_normal
+        font_style: app.proc_style
     MDLabel:
         text: root.proc_name
         color: app.theme_cls.opposite_bg_normal
+        font_style: app.proc_style
     MDLabel:
         text: root.proc_cpu
         halign: "center"
         color: app.theme_cls.opposite_bg_normal
+        font_style: app.proc_style
     MDLabel:
         text: root.proc_mem
         halign: "center"
         color: app.theme_cls.opposite_bg_normal
+        font_style: app.proc_style
 
 <LButton@ButtonBehavior+MDLabel>
     sorted_by: self.text == app.sorted_by
@@ -174,6 +178,34 @@
             orientation: 'vertical'
             MDBoxLayout:
                 adaptive_height: True
+                MDLabel:
+                    text: 'Killer Menu'
+                    halign: 'center'
+                    font_style: 'H6'
+                    color: app.theme_cls.opposite_bg_normal
+
+            MDBoxLayout:
+                adaptive_height: True
+                MDLabel:
+                    text: 'Zoom'
+                    halign: 'center'
+                    color: app.theme_cls.opposite_bg_normal
+                CheckZoom:
+                    on_active: app.set_zoom(self.active, '0.5x')
+                MDLabel:
+                    text: '0.5x'
+                    color: app.theme_cls.opposite_bg_normal
+                CheckZoom:
+                    on_active: app.set_zoom(self.active, '1x')
+                    active: True
+                MDLabel:
+                    text: '1x'
+                    color: app.theme_cls.opposite_bg_normal
+
+            Widget
+
+            MDBoxLayout:
+                adaptive_height: True
                 Widget
                 MDIconButton:
                     id: style_button
@@ -182,3 +214,8 @@
                     on_release:
                         self.dark = not self.dark
                         app.theme_cls.theme_style = "Dark" if self.dark else "Light"
+
+<CheckZoom@MDCheckbox>:
+    group: 'zoom'
+    size_hint: None, None
+    size: dp(48), dp(48)

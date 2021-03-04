@@ -3,7 +3,7 @@ from kivymd.uix.navigationdrawer import NavigationLayout
 from psutil import process_iter, NoSuchProcess, cpu_count, AccessDenied
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
-from kivy.properties import StringProperty, ListProperty, NumericProperty
+from kivy.properties import StringProperty, ListProperty, NumericProperty, OptionProperty
 from kivy.lang import Builder
 from os.path import dirname, abspath
 from os.path import join as p_join
@@ -345,6 +345,13 @@ class Killer(MDApp):
     # List[List[Union[str, bool, Set[str], Set[str]]]]
     selection_control = []
 
+    zooms = {
+        '0.5x': (32, 'Body2'),
+        '1x': (dp(48), 'Body1')
+    }
+    proc_height = OptionProperty(zooms['1x'][0], options=[z[0] for _, z in zooms.items()])
+    proc_style = OptionProperty(zooms['1x'][1], options=[z[1] for _, z in zooms.items()])
+
     def __init__(self, **kwargs):
         self.icon = p_join(this_dir, 'icons\\Killer.exe.png')
         super().__init__(**kwargs)
@@ -362,6 +369,11 @@ class Killer(MDApp):
         Thread(target=self.main.always_setting_visible_range, daemon=True).start()
         Thread(target=always_updating_processes, daemon=True).start()
         Thread(target=self.always_selecting, daemon=True).start()
+
+    def set_zoom(self, active, zoom):
+        if active:
+            self.proc_height = self.zooms[zoom][0]
+            self.proc_style = self.zooms[zoom][1]
 
     def search_focus(*args):
         args[0].main.ids.search_field.focus = True
