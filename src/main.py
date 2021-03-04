@@ -1,4 +1,5 @@
 from kivymd.uix.list import OneLineAvatarIconListItem
+from kivymd.uix.navigationdrawer import NavigationLayout
 from psutil import process_iter, NoSuchProcess, cpu_count, AccessDenied
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
@@ -347,10 +348,12 @@ class Killer(MDApp):
     def __init__(self, **kwargs):
         self.icon = p_join(this_dir, 'icons\\Killer.exe.png')
         super().__init__(**kwargs)
+        self.navigator = Navigator()
         self.main = Main()
+        self.navigator.ids.sm.add_widget(self.main)
 
     def build(self):
-        return self.main
+        return self.navigator
 
     def on_start(self):
         self.main.first_update_data()
@@ -592,6 +595,10 @@ class ProcessCell(MDBoxLayout):
     proc_name = StringProperty()
     proc_cpu = StringProperty()
     proc_mem = StringProperty()
+
+
+class Navigator(NavigationLayout):
+    pass
 
 
 if __name__ == '__main__':

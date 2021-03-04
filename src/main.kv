@@ -20,10 +20,8 @@
                 hint_text: 'Search process'
                 on_text: root.fast_answer(self.text)
             MDIconButton:
-                icon: 'moon-waxing-crescent'
-                on_release:
-                    app.theme_cls.theme_style = "Dark" if self.icon == 'moon-waxing-crescent' else "Light"
-                    self.icon = 'white-balance-sunny' if self.icon == 'moon-waxing-crescent' else 'moon-waxing-crescent'
+                icon: 'menu'
+                on_release: app.navigator.ids.nav_drawer.set_state("open")
 
         MDBoxLayout:
             adaptive_height: True
@@ -164,3 +162,23 @@
             color: app.theme_cls.opposite_bg_normal
 
 <Container@IRightBodyTouch+MDBoxLayout>
+
+<Navigator>
+    ScreenManager
+        id: sm
+    MDNavigationDrawer:
+        id: nav_drawer
+        anchor: 'right'
+
+        MDBoxLayout:
+            orientation: 'vertical'
+            MDBoxLayout:
+                adaptive_height: True
+                Widget
+                MDIconButton:
+                    id: style_button
+                    dark: False
+                    icon: 'moon-waxing-crescent' if not self.dark else 'white-balance-sunny'
+                    on_release:
+                        self.dark = not self.dark
+                        app.theme_cls.theme_style = "Dark" if self.dark else "Light"
