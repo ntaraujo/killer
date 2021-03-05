@@ -16,7 +16,7 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDRaisedButton
 from typing import Dict, List
 import sys
-from utils import icon_path, kill_proc_tree, kill # noqa
+from utils import icon_path, kill_proc_tree, kill  # noqa
 
 processes = {}
 processes_lock = Lock()
@@ -339,6 +339,8 @@ class Main(Screen):
 
 
 class Killer(MDApp):
+    version = StringProperty(None, allownone=True)
+    update = StringProperty(None, allownone=True)
     current_selection = ListProperty()
     sorted_by = StringProperty("PID")
     selection_lock = Lock()
@@ -369,6 +371,18 @@ class Killer(MDApp):
         Thread(target=self.main.always_setting_visible_range, daemon=True).start()
         Thread(target=always_updating_processes, daemon=True).start()
         Thread(target=self.always_selecting, daemon=True).start()
+
+    def check_for_updates(self, state):
+        if state == "open":
+            Thread(target=self.check_for_updates_base).start()
+
+    def check_for_updates_base(self):
+        if self.version is None:
+            from utils import proc_version_tag, this_pid  # noqa
+            self.version = proc_version_tag(processes[str(this_pid)])
+        if self.version is not None:
+            from utils import update_to  # noqa
+            self.update = update_to(self.version, 'ntaraujo', 'killer')
 
     def set_zoom(self, active, zoom):
         if active:

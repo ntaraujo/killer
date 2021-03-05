@@ -1,3 +1,5 @@
+#:import hex_from_color kivy.utils.get_hex_from_color
+#:import web_open webbrowser.open
 <CustomOneLineIconListItem>:
 
     IconLeftWidget:
@@ -173,13 +175,15 @@
     MDNavigationDrawer:
         id: nav_drawer
         anchor: 'right'
+        on_state:
+            app.check_for_updates(self.state)
 
         MDBoxLayout:
             orientation: 'vertical'
             MDBoxLayout:
                 adaptive_height: True
                 MDLabel:
-                    text: 'Killer Menu'
+                    text: 'Killer' if app.version is None else f'Killer {app.version}'
                     halign: 'center'
                     font_style: 'H6'
                     color: app.theme_cls.opposite_bg_normal
@@ -206,7 +210,16 @@
 
             MDBoxLayout:
                 adaptive_height: True
-                Widget
+                MDLabel:
+                    href: 'https://github.com/ntaraujo/killer'
+                    a: 'Killer {}'.format(app.update)
+                    a_color: hex_from_color(app.theme_cls.primary_color)
+                    main_text: '[ref={}][color={}]{}[/color][/ref] available!'.format(self.href, self.a_color, self.a)
+                    text: '' if app.update is None else self.main_text
+                    markup: True
+                    halign: 'center'
+                    color: app.theme_cls.opposite_bg_normal
+                    on_ref_press: web_open(self.href)
                 MDIconButton:
                     id: style_button
                     dark: False

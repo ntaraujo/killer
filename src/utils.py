@@ -1,24 +1,69 @@
 from psutil import NoSuchProcess, AccessDenied, Process
 from win32con import SM_CXICON
-from win32api import GetSystemMetrics
+from win32api import GetSystemMetrics, GetFileVersionInfo, LOWORD, HIWORD
 from os.path import dirname, abspath
 from os.path import join as p_join
 from os.path import exists as p_exists
 from win32ui import CreateDCFromHandle, CreateBitmap
-from win32gui import ExtractIconEx, DestroyIcon, GetDC # noqa
+from win32gui import ExtractIconEx, DestroyIcon, GetDC  # noqa
 from PIL import Image
 from subprocess import Popen, PIPE
 from os import PathLike, getpid
-from typing import Union, Dict, Callable, Any, List, Optional, Type, Collection
-from pywintypes import error # noqa
+from typing import Union, Dict, Callable, Any, List, Optional, Type, Collection, Tuple
+from pywintypes import error  # noqa
 from bisect import bisect_left, bisect_right
 import sys
 from time import perf_counter
+from requests import get as get_request
 
 this_pid = getpid()
 path_type = Union[str, bytes, PathLike]
 this_dir: path_type = getattr(sys, '_MEIPASS', abspath(dirname(__file__)))
 default_icon_path: path_type = p_join(this_dir, 'icons', 'default.png')
+
+
+def get_version_number(exe: path_type) -> Optional[Tuple[int, int, int, int]]:
+    try:
+        info = GetFileVersionInfo(exe, "\\")
+        ms = info['FileVersionMS']
+        ls = info['FileVersionLS']
+        return HIWORD(ms), LOWORD(ms), HIWORD(ls), LOWORD(ls)
+    except error:
+        return
+
+
+def github_version_tag(xyz: Tuple[int, int, int, int]):
+    versioned = []
+    zero_removed = False
+    for component in xyz[::-1]:
+        if component >= 1 or zero_removed:
+            zero_removed = True
+            versioned.insert(0, str(component))
+    return 'v' + '.'.join(versioned)
+
+
+def proc_version_tag(proc: Process):
+    exe = proc.__dict__.get("info", {}).get("exe", None)
+    if exe is None:
+        try:
+            exe = proc.exe()
+        except (NoSuchProcess, AccessDenied):
+            return
+    version = get_version_number(exe)
+    if version is not None:
+        return github_version_tag(version)
+
+
+def latest_version(user: str, repo: str) -> str:
+    return get_request(f"https://api.github.com/repos/{user}/{repo}/releases/latest").json()["tag_name"]
+
+
+def update_to(version: str, user: str, repo: str):
+    latest = latest_version(user, repo)
+    if latest > version:
+        return latest
+    else:
+        return
 
 
 def icon_path(exe: path_type, name: str):
@@ -84,7 +129,7 @@ def ordering_bisect_left(seq: Collection, e, reverse: bool, lo: Optional[int] = 
         return bisect_left(seq, e, lo, hi)
 
 
-def kill_proc_tree(parent: Type[Process], include_parent=True):
+def kill_proc_tree(parent: Process, include_parent=True):
     fails = []
     try:
         children = parent.children(recursive=True)
@@ -144,4 +189,5 @@ def timer(function: Union[Callable[[Any], Any], str]) -> Optional[Callable[[Any]
         funcs_results[function] = _toe
         print(f'Function {function.__qualname__} is taking about {_toe:.5f} seconds.')
         return to_return
+
     return new_func
