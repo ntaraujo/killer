@@ -34,7 +34,7 @@ def update_processes():
         temp_processes[str(proc.info['pid'])] = proc
 
     processes_lock.acquire()
-    for pid in list(processes):
+    for pid in [*processes]:
         if pid not in temp_processes:
             if pid in app.current_selection:
                 app.current_selection.remove(pid)
@@ -486,7 +486,7 @@ class Killer(MDApp):
         elif not active and pid in self.current_selection:
             self.current_selection.remove(pid)
 
-            for _search, _check, _added, _removed in self.selection_control.copy():
+            for _search, _check, _added, _removed in [*self.selection_control]:
                 if pid in _added:
                     _removed.add(pid)
                     if not _added - _removed:
@@ -508,7 +508,7 @@ class Killer(MDApp):
 
             search = self.main.ids.search_field.text
             need_to_add = True
-            for _search, _check, _added, _removed in self.selection_control.copy():
+            for _search, _check, _added, _removed in [*self.selection_control]:
                 # selected all
                 # selected a group which includes all _added bcs _search was more specific or as specific as
                 surely_include_all = not search or (_check and search in _search)
