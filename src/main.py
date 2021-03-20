@@ -51,15 +51,7 @@ def update_processes():
 
 def first_update_processes():
     global processes
-    alive = False
-    for proc in process_iter(['pid', 'name', 'exe']):
-        processes[str(proc.info['pid'])] = proc
-
-        if proc.info['name'] == "Killer.exe":
-            if alive:
-                sys.exit()
-            else:
-                alive = True
+    processes = {str(proc.info['pid']): proc for proc in process_iter(['pid', 'name', 'exe'])}
 
 
 def always_updating_processes():
@@ -631,6 +623,7 @@ if __name__ == '__main__':
     first_update_processes()
 
     from kivy.config import Config
+
     Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
     app = Killer()
