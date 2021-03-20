@@ -629,5 +629,9 @@ class Navigator(NavigationLayout):
 
 if __name__ == '__main__':
     first_update_processes()
+
+    from kivy.config import Config
+    Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
+
     app = Killer()
     app.run()
