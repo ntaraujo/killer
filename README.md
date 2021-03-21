@@ -1,11 +1,13 @@
 <h1 align="center">Killer</h1>
-<p align="center">That damn Chrome</p>
-
-<p align="center"><img src="https://github.com/ntaraujo/killer/blob/main/data/samples/light.PNG" alt="Killer"></p>
 
 <p align="center"><a href="https://github.com/ntaraujo/killer/blob/master/LICENSE"><img src="https://img.shields.io/github/license/ntaraujo/killer.svg" alt="License"></a>
 <a href="https://github.com/ntaraujo/killer/issues"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" alt="Contributions Welcome"></a>
-<a href="https://github.com/ntaraujo/killer/releases/latest"><img src="https://img.shields.io/github/downloads/ntaraujo/killer/total.svg" alt="Github All Releases"></a></p>
+<a href="https://github.com/ntaraujo/killer/releases/latest"><img src="https://img.shields.io/github/downloads/ntaraujo/killer/total.svg" alt="Github All Releases"></a>
+<a href="https://github.com/ntaraujo/killer/releases/latest/download/killer-setup.exe"><img src="https://img.shields.io/badge/-download%20link-blue?logo=windows" alt="killer-setup.exe"></a></p>
+
+<p align="center">That damn Chrome</p>
+
+<p align="center"><img src="https://github.com/ntaraujo/killer/blob/main/data/samples/light.PNG" alt="Killer"></p>
 
 <h1 align="center"><a href="https://github.com/ntaraujo/killer/releases/latest/download/killer-setup.exe">⬇Download here</a></h1>
 
@@ -15,7 +17,11 @@ Tired of trying to kill processes with the default Windows Task Manager? Selecti
 
 Killer is an app with concise design which displays the processes, let search between them, order by pid/name/cpu/memory
 and kill multiple apps (or even all) at once. Besides that, you can also kill the children of the selected process(es),
-which means, all the other processes created by these (no survival chance)
+which means, all the other processes created by these (no survival chance).
+
+When you download the installer it will guide you through the options, but there is no need to change anything. Just next next 😉
+
+There is also a [standalone executable](https://github.com/ntaraujo/killer/releases/latest/download/Killer.exe)
 
 ![Search and select all](https://github.com/ntaraujo/killer/blob/main/data/samples/search.PNG)
 
@@ -23,11 +29,24 @@ Tip: If you allow the creation of a desktop icon during the installation, "Ctrl+
 
 Any issue or improvement suggestion can be sent in the [issues tab](https://github.com/ntaraujo/killer/issues)
 
-More features coming
+More features coming!
+
+## 📝Notes
+
+Tested on: Windows 10
+
+Requirements:
+* Windows >= Vista, up to date, or Windows 10
+* Open GL >= 2.0
+* 100MB of free disk space for the installer, 37MB for the standalone
+
+This app doesn't aims to be a complete task manager, even take place of the default one. Despite that, you can question: "why these requirements?"
+
+The tools chosen to proceed with this project are why. We understand the problem, but there are no plans to rewrite all the code soon 🙂
 
 ## ⬆️Update
 
-For updating this app, just download [the newest release](https://github.com/ntaraujo/killer/releases/latest/download/killer-setup.exe)
+For updating this app, just download ![[killer-setup.exe](https://github.com/ntaraujo/killer/releases/latest/download/killer-setup.exe)](https://img.shields.io/badge/-the%20newest%20release-blue)
 and follow with the installation to the same folder used before.
 
 ## 🔧 Contributing
