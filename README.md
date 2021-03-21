@@ -40,9 +40,10 @@ Requirements:
 * Open GL >= 2.0
 * 100MB of free disk space for the installer, 37MB for the standalone
 
-This app doesn't aims to be a complete task manager, even take place of the default one. Despite that, you can question: "why these requirements?"
+This app doesn't aims to be a complete task manager, even take place of the default one.
 
-The tools chosen to proceed with this project are why. We understand the problem, but there are no plans to rewrite all the code soon 🙂
+Understand also, despite being not a complete solution, these are the requirements by the tools chosen to proceed with this project.
+Mainly the language and framework.
 
 ## ⬆️Update
 
