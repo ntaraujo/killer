@@ -47,7 +47,7 @@ Mainly the language and framework.
 
 The standalone executable:
 
-Despite requiring less space, it will be decompress every time it is called, slowing down the startup and unallowing any configuration for being saved.
+Despite requiring less space, it will be decompressed every time it is called, slowing down the startup and unallowing any configuration for being saved.
 That is why the recommended way is using the installer `killer-setup.exe`
 
 ## ⬆️Update
