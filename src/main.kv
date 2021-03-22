@@ -195,13 +195,14 @@
                     halign: 'center'
                     color: app.theme_cls.opposite_bg_normal
                 CheckZoom:
-                    on_active: app.set_zoom(self.active, '0.5x')
+                    on_active: app.zoom = '0.5x'
+                    active: app.zoom == '0.5x'
                 MDLabel:
                     text: '0.5x'
                     color: app.theme_cls.opposite_bg_normal
                 CheckZoom:
-                    on_active: app.set_zoom(self.active, '1x')
-                    active: True
+                    on_active: app.zoom = '1x'
+                    active: app.zoom == '1x'
                 MDLabel:
                     text: '1x'
                     color: app.theme_cls.opposite_bg_normal
@@ -221,12 +222,8 @@
                     color: app.theme_cls.opposite_bg_normal
                     on_ref_press: web_open(self.href)
                 MDIconButton:
-                    id: style_button
-                    dark: False
-                    icon: 'moon-waxing-crescent' if not self.dark else 'white-balance-sunny'
-                    on_release:
-                        self.dark = not self.dark
-                        app.theme_cls.theme_style = "Dark" if self.dark else "Light"
+                    icon: 'moon-waxing-crescent' if not app.dark else 'white-balance-sunny'
+                    on_release: app.dark = not app.dark
 
 <CheckZoom@MDCheckbox>:
     group: 'zoom'

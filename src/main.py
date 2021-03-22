@@ -3,7 +3,7 @@ from kivymd.uix.navigationdrawer import NavigationLayout
 from psutil import process_iter, NoSuchProcess, cpu_count, AccessDenied
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
-from kivy.properties import StringProperty, ListProperty, NumericProperty, OptionProperty
+from kivy.properties import StringProperty, ListProperty, NumericProperty, OptionProperty, BooleanProperty
 from kivy.lang import Builder
 from os.path import dirname, abspath
 from os.path import join as p_join
@@ -339,12 +339,39 @@ class Killer(MDApp):
     # List[List[Union[str, bool, Set[str], Set[str]]]]
     selection_control = []
 
-    zooms = {
-        '0.5x': (32, 'Body2'),
-        '1x': (dp(48), 'Body1')
-    }
-    proc_height = OptionProperty(zooms['1x'][0], options=[z[0] for _, z in zooms.items()])
-    proc_style = OptionProperty(zooms['1x'][1], options=[z[1] for _, z in zooms.items()])
+    from json import load
+    killer_config_file = p_join(this_dir, 'killer_config.json')
+    with open(killer_config_file, "r") as killer_read_file:
+        killer_config = load(killer_read_file)
+    del killer_read_file, load
+
+    def update_config(self):
+        from json import dump
+        with open(self.killer_config_file, "w") as write_file:
+            dump(self.killer_config, write_file)
+
+    zooms = {'0.5x': (32, 'Body2'),
+             '1x': (dp(48), 'Body1')}
+
+    z = killer_config['zoom']
+    zoom = StringProperty(z)
+    proc_height = NumericProperty(zooms[z][0])
+    proc_style = StringProperty(zooms[z][1])
+    del z
+
+    @staticmethod
+    def on_zoom(self, value):
+        self.proc_height, self.proc_style = self.zooms[value]
+        self.killer_config['zoom'] = value
+        Thread(target=self.update_config).start()
+
+    dark = BooleanProperty(killer_config['dark'])
+
+    @staticmethod
+    def on_dark(self, value):
+        self.theme_cls.theme_style = "Dark" if value else "Light"
+        self.killer_config['dark'] = value
+        Thread(target=self.update_config).start()
 
     def __init__(self, **kwargs):
         self.icon = p_join(this_dir, 'icons\\Killer.exe.png')
@@ -352,6 +379,7 @@ class Killer(MDApp):
         self.navigator = Navigator()
         self.main = Main()
         self.navigator.ids.sm.add_widget(self.main)
+        self.theme_cls.theme_style = "Dark" if self.dark else "Light"
 
     def build(self):
         return self.navigator
@@ -375,11 +403,6 @@ class Killer(MDApp):
         if self.version is not None:
             from utils import update_to  # noqa
             self.update = update_to(self.version, 'ntaraujo', 'killer')
-
-    def set_zoom(self, active, zoom):
-        if active:
-            self.proc_height = self.zooms[zoom][0]
-            self.proc_style = self.zooms[zoom][1]
 
     def search_focus(*args):
         args[0].main.ids.search_field.focus = True
