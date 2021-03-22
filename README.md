@@ -45,10 +45,17 @@ This app doesn't aims to be a complete task manager, even take place of the defa
 Understand also, despite being not a complete solution, these are the requirements by the tools chosen to proceed with this project.
 Mainly the language and framework.
 
+The standalone executable:
+
+Despite requiring less space, it will be decompress every time it is called, slowing down the startup and unallowing any configuration for being saved.
+That is why the recommended way is using the installer `killer-setup.exe`
+
 ## ⬆️Update
 
 For updating this app, just download ![[killer-setup.exe](https://github.com/ntaraujo/killer/releases/latest/download/killer-setup.exe)](https://img.shields.io/badge/-the%20newest%20release-blue)
 and follow with the installation to the same folder used before.
+
+Is known the hotkey "Ctrl+Shift+K" may not work until the next user logon
 
 ## 🔧 Contributing
 
