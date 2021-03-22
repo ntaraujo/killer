@@ -21,8 +21,6 @@ which means, all the other processes created by these (no survival chance).
 
 When you download the installer it will guide you through the options, but there is no need to change anything. Just next next 😉
 
-There is also a [standalone executable](https://github.com/ntaraujo/killer/releases/latest/download/Killer.exe)
-
 ![Search and select all](https://github.com/ntaraujo/killer/blob/main/data/samples/search.PNG)
 
 Tip: If you allow the creation of a desktop icon during the installation, "Ctrl+Shift+K" will open the Killer
@@ -45,7 +43,7 @@ This app doesn't aims to be a complete task manager, even take place of the defa
 Understand also, despite being not a complete solution, these are the requirements by the tools chosen to proceed with this project.
 Mainly the language and framework.
 
-The standalone executable:
+The [standalone executable](https://github.com/ntaraujo/killer/releases/latest/download/Killer.exe):
 
 Despite requiring less space, it will be decompressed every time it is called, slowing down the startup and unallowing any configuration for being saved.
 That is why the recommended way is using the installer `killer-setup.exe`
