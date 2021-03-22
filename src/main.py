@@ -3,7 +3,7 @@ from kivymd.uix.navigationdrawer import NavigationLayout
 from psutil import process_iter, NoSuchProcess, cpu_count, AccessDenied
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
-from kivy.properties import StringProperty, ListProperty, NumericProperty, OptionProperty, BooleanProperty
+from kivy.properties import StringProperty, ListProperty, NumericProperty, BooleanProperty
 from kivy.lang import Builder
 from os.path import dirname, abspath
 from os.path import join as p_join
