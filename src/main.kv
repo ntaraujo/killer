@@ -45,19 +45,23 @@
                     id: order
                     size_hint: None, None
                     size: 32, 32
-                    icon: "arrow-down"
+                    icon: "arrow-up" if app.desc else "arrow-down"
                     color: app.theme_cls.opposite_bg_normal
-                    on_release: app.sort_by(app.sorted_by, "arrow-up" if self.icon == "arrow-down" else "arrow-down")
+                    on_release: app.desc = not app.desc
             LButton:
                 size_hint_x: None
                 width: "48dp"
                 text: "PID"
+                order_name: 'proc_pid'
             LButton:
                 text: "Process Name"
+                order_name: 'proc_name'
             LButton:
                 text: "CPU Usage"
+                order_name: 'proc_cpu'
             LButton:
                 text: "Memory Usage"
+                order_name: 'proc_mem'
 
         RecycleView:
             id: rv
@@ -132,16 +136,19 @@
         font_style: app.proc_style
 
 <LButton@ButtonBehavior+MDLabel>
-    sorted_by: self.text == app.sorted_by
+    order_name: 'proc_pid'
+    ordered: self.order_name == app.order_by
     canvas.before:
         Color:
-            rgba: app.theme_cls.primary_color if self.sorted_by else (0, 0, 0, 0)
+            rgba: app.theme_cls.primary_color if self.ordered else (0, 0, 0, 0)
         Rectangle:
             pos: self.pos
             size: self.size
-    on_release: app.sort_by(self.text, app.main.ids.order.icon)
+    on_release:
+        app.desc = not app.desc if self.ordered else app.desc
+        app.order_by = self.order_name
     halign: "center"
-    color: (1, 1, 1, 1) if self.sorted_by else app.theme_cls.opposite_bg_normal
+    color: (1, 1, 1, 1) if self.ordered else app.theme_cls.opposite_bg_normal
 
 <IButton@ButtonBehavior+MDIcon>
     color: app.theme_cls.opposite_bg_normal

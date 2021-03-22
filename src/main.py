@@ -345,8 +345,9 @@ class Killer(MDApp):
         killer_config = load(killer_read_file)
     del killer_read_file, load
 
-    def update_config(self):
+    def update_config(self, key, value):
         from json import dump
+        self.killer_config[key] = value
         with open(self.killer_config_file, "w") as write_file:
             dump(self.killer_config, write_file)
 
@@ -362,16 +363,14 @@ class Killer(MDApp):
     @staticmethod
     def on_zoom(self, value):
         self.proc_height, self.proc_style = self.zooms[value]
-        self.killer_config['zoom'] = value
-        Thread(target=self.update_config).start()
+        Thread(target=self.update_config, args=('zoom', value)).start()
 
     dark = BooleanProperty(killer_config['dark'])
 
     @staticmethod
     def on_dark(self, value):
         self.theme_cls.theme_style = "Dark" if value else "Light"
-        self.killer_config['dark'] = value
-        Thread(target=self.update_config).start()
+        Thread(target=self.update_config, args=('dark', value)).start()
 
     def __init__(self, **kwargs):
         self.icon = p_join(this_dir, 'icons\\Killer.exe.png')
@@ -380,6 +379,20 @@ class Killer(MDApp):
         self.main = Main()
         self.navigator.ids.sm.add_widget(self.main)
         self.theme_cls.theme_style = "Dark" if self.dark else "Light"
+
+    desc = BooleanProperty(killer_config['desc'])
+
+    @staticmethod
+    def on_desc(self, value):
+        Thread(target=self.main.order, args=(self.order_by, value)).start()
+        Thread(target=self.update_config, args=('desc', value)).start()
+
+    order_by = StringProperty(killer_config['order_by'])
+
+    @staticmethod
+    def on_order_by(self, value):
+        Thread(target=self.main.order, args=(value, self.desc)).start()
+        Thread(target=self.update_config, args=('order_by', value)).start()
 
     def build(self):
         return self.navigator
@@ -547,20 +560,6 @@ class Killer(MDApp):
             self.current_selection = []
             self.selection_control = []
         self.update_selection_label()
-
-    def sort_by(self, data_type, order):
-        self.sorted_by = data_type
-        self.main.ids.order.icon = order
-        if data_type == "Process Name":
-            key = "proc_name"
-        elif data_type == "PID":
-            key = "proc_pid"
-        elif data_type == "Memory Usage":
-            key = "proc_mem"
-        else:
-            key = "proc_cpu"
-        desc = True if order == "arrow-up" else False
-        Thread(target=self.main.order, args=(key, desc), daemon=True).start()
 
     def kill_selected(self):
         fails = []
