@@ -202,14 +202,12 @@
                     halign: 'center'
                     color: app.theme_cls.opposite_bg_normal
                 CheckZoom:
-                    on_active: app.zoom = '0.5x'
-                    active: app.zoom == '0.5x'
+                    zid: '0.5x'
                 MDLabel:
                     text: '0.5x'
                     color: app.theme_cls.opposite_bg_normal
                 CheckZoom:
-                    on_active: app.zoom = '1x'
-                    active: app.zoom == '1x'
+                    zid: '1x'
                 MDLabel:
                     text: '1x'
                     color: app.theme_cls.opposite_bg_normal
@@ -233,6 +231,9 @@
                     on_release: app.dark = not app.dark
 
 <CheckZoom@MDCheckbox>:
+    zid: '0.5x'
     group: 'zoom'
     size_hint: None, None
     size: dp(48), dp(48)
+    on_active: app.zoom = self.zid
+    active: app.zoom == self.zid
