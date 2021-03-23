@@ -38,6 +38,11 @@ def update_processes():
         if pid not in temp_processes:
             if pid in app.current_selection:
                 app.current_selection.remove(pid)
+            for selection in app.selection_control:
+                if pid in selection[2]:
+                    app.selection_control.remove(selection)
+                    app.update_selection_label()
+                    break
             del processes[pid]
 
     for pid, proc in temp_processes.items():
