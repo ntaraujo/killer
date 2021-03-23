@@ -78,12 +78,8 @@ class Main(Screen):
     last_search = None
 
     def __init__(self, **kw):
-        self.key_func = self.key_func
+        self.key_func = lambda c: c["proc_pid"]  # overwrote
         super().__init__(**kw)
-
-    @staticmethod
-    def key_func(c):
-        return float(c["proc_pid"].replace('%', ''))
 
     @mainthread
     def assign_data(self, data):
@@ -273,22 +269,18 @@ class Main(Screen):
                 self.order_update_data()
 
     def order(self, order_by, reverse):
-        def key_func(c):
-            if order_by == "proc_name":
-                return c[order_by].lower()
-            else:
-                return float(c[order_by].replace('%', ''))
-
-        self.key_func = key_func
+        if order_by == "proc_name":
+            self.key_func = lambda c: c[order_by].lower()
+        else:
+            self.key_func = lambda c: float(c[order_by].replace('%', ''))
         self.reverse = reverse
         self.order_by = order_by
 
-        if order_by not in ("proc_cpu", "proc_mem"):
-            self.ordered = True
-            with self.data_lock:
-                temp_data = sorted(self.ids.rv.data, key=key_func, reverse=reverse)
-                self.assign_data(temp_data)
-            self.ordered = True
+        self.ordered = True
+        with self.data_lock:
+            temp_data = sorted(self.ids.rv.data, key=self.key_func, reverse=reverse)
+            self.assign_data(temp_data)
+        self.ordered = True
 
     def set_visible_range(self):
         try:
@@ -384,6 +376,7 @@ class Killer(MDApp):
         self.main = Main()
         self.navigator.ids.sm.add_widget(self.main)
         self.theme_cls.theme_style = "Dark" if self.dark else "Light"
+        Thread(target=self.main.order, args=(self.order_by, self.desc)).start()
 
     desc = BooleanProperty(killer_config['desc'])
 
