@@ -582,6 +582,7 @@ class Killer(MDApp):
                 fails.extend(kill_proc_tree(processes[pid]))
         self.show_fails(fails)
 
+    @mainthread
     def show_fails(self, fails):
         if len(fails) == 0:
             return

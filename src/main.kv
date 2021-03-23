@@ -1,5 +1,6 @@
 #:import hex_from_color kivy.utils.get_hex_from_color
 #:import web_open webbrowser.open
+#:import Thread threading.Thread
 <CustomOneLineIconListItem>:
 
     IconLeftWidget:
@@ -92,10 +93,10 @@
                 spacing: "10dp"
                 MDRaisedButton:
                     text: "KILL"
-                    on_release: app.kill_selected()
+                    on_release: Thread(target=app.kill_selected).start()
                 MDRaisedButton:
                     text: "THE CHILDREN TOO"
-                    on_release: app.kill_selected_and_children()
+                    on_release: Thread(target=app.kill_selected_and_children).start()
 
 <ProcessCell>
     adaptive_height: True
