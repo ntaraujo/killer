@@ -67,6 +67,9 @@
         RecycleView:
             id: rv
             viewclass: 'ProcessCell'
+            on_scroll_start:
+                to_use_if = None if root.data_lock.locked() else Thread(target=root.data_lock.acquire).start()
+            on_scroll_stop: root.data_lock.release()
 
             RecycleBoxLayout:
                 default_size: None, app.proc_height
