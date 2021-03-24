@@ -21,7 +21,7 @@
             MDTextField:
                 id: search_field
                 hint_text: 'Search process'
-                on_text: root.fast_answer(self.text)
+                on_text: root.fast_answer(self.text.lower())
             MDIconButton:
                 icon: 'menu'
                 on_release: app.navigator.ids.nav_drawer.set_state("open")
@@ -121,7 +121,7 @@
     MDLabel:
         size_hint_x: None
         width: "48dp"
-        text: root.proc_pid
+        text: str(root.proc_pid)
         color: app.theme_cls.opposite_bg_normal
         font_style: app.proc_style
     MDLabel:
@@ -129,12 +129,12 @@
         color: app.theme_cls.opposite_bg_normal
         font_style: app.proc_style
     MDLabel:
-        text: root.proc_cpu
+        text: "{:.4f}%".format(root.proc_cpu)
         halign: "center"
         color: app.theme_cls.opposite_bg_normal
         font_style: app.proc_style
     MDLabel:
-        text: root.proc_mem
+        text: "{:.4f}%".format(root.proc_mem)
         halign: "center"
         color: app.theme_cls.opposite_bg_normal
         font_style: app.proc_style
@@ -175,7 +175,7 @@
         MDLabel:
             text: root.proc_user
             halign: "center"
-            font_size: root.little_font if root.little_font is not None else self.font_size
+            font_size: self.font_size if root.little_font is None else root.little_font
             color: app.theme_cls.opposite_bg_normal
 
 <Container@IRightBodyTouch+MDBoxLayout>
@@ -231,7 +231,7 @@
                     color: app.theme_cls.opposite_bg_normal
                     on_ref_press: web_open(self.href)
                 MDIconButton:
-                    icon: 'moon-waxing-crescent' if not app.dark else 'white-balance-sunny'
+                    icon: 'white-balance-sunny' if app.dark else 'moon-waxing-crescent'
                     on_release: app.dark = not app.dark
 
 <CheckZoom@MDCheckbox>:

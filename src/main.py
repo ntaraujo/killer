@@ -9,7 +9,7 @@ from os.path import dirname, abspath
 from os.path import join as p_join
 from kivy.clock import mainthread, Clock
 from time import sleep
-from threading import Thread, Lock, Event
+from threading import Thread, Lock
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivy.metrics import dp
 from kivymd.uix.dialog import MDDialog
@@ -30,33 +30,31 @@ cpus = cpu_count()
 def update_processes():
     global processes
     temp_processes = {}
-    for proc in process_iter(['pid', 'name', 'exe']):
-        temp_processes[str(proc.info['pid'])] = proc
 
     processes_lock.acquire()
+
+    for proc in process_iter(['name', 'exe']):
+        pid = proc.pid
+        temp_processes[pid] = proc
+
+        proc_now = processes.get(pid)
+
+        if (proc_now is None) or (proc.info['name'] != proc_now.info['name']):
+            processes[pid] = proc
+
     for pid in [*processes]:
         if pid not in temp_processes:
+            app.select_row(pid, False)
             if pid in app.current_selection:
                 app.current_selection.remove(pid)
-            for selection in app.selection_control:
-                if pid in selection[2]:
-                    app.selection_control.remove(selection)
-                    app.update_selection_label()
-                    break
             del processes[pid]
 
-    for pid, proc in temp_processes.items():
-        if pid in processes:
-            if proc.info['name'] != processes[pid].info['name']:
-                processes[pid] = proc
-        else:
-            processes[pid] = proc
     processes_lock.release()
 
 
 def first_update_processes():
     global processes
-    processes = {str(proc.info['pid']): proc for proc in process_iter(['pid', 'name', 'exe'])}
+    processes = {proc.pid: proc for proc in process_iter(['name', 'exe'])}
 
 
 def always_updating_processes():
@@ -69,8 +67,6 @@ class Main(Screen):
     data_lock = Lock()
     answer_lock = Lock()
     answered = ordered = False
-    reverse = False
-    order_by = "proc_pid"
     visible_range = range(0)
     special_order_cells = []
     order_cells = []
@@ -78,7 +74,12 @@ class Main(Screen):
     last_search = None
 
     def __init__(self, **kw):
-        self.key_func = lambda c: c["proc_pid"]  # overwrote
+        self.order_by = order_by = Killer.killer_config["order_by"]
+        if order_by == "proc_name":
+            self.key_func = lambda c: c["proc_name"].lower()
+        else:
+            self.key_func = lambda c: c[order_by]  # overwrote
+        self.reverse = Killer.killer_config["desc"]
         super().__init__(**kw)
 
     @mainthread
@@ -90,16 +91,16 @@ class Main(Screen):
         self.ids.multiple_select.active = active
 
     def new_special_order_cell(self, proc, proc_pid, proc_name, cpu, mem):
-        proc_cpu = proc_mem = "0.0000%"
+        proc_cpu = proc_mem = 0.0
 
         proc_exe = proc.info['exe']
         proc_icon = icon_path(proc_exe, proc_name)
 
         try:
             if cpu:
-                proc_cpu = f'{proc.cpu_percent(1) / cpus:.4f}%'
+                proc_cpu = proc.cpu_percent(1) / cpus
             if mem:
-                proc_mem = f'{proc.memory_percent():.4f}%'
+                proc_mem = proc.memory_percent()
         except NoSuchProcess:
             print(f'NoSuchProcess {proc_pid} in Main.new_special_order_cell')
 
@@ -117,17 +118,14 @@ class Main(Screen):
         proc = processes[proc_pid]
         try:
             if cpu:
-                cell["proc_cpu"] = f'{proc.cpu_percent(1) / cpus:.4f}%'
+                cell["proc_cpu"] = proc.cpu_percent(1) / cpus
             if mem:
-                cell["proc_mem"] = f'{proc.memory_percent():.4f}%'
+                cell["proc_mem"] = proc.memory_percent()
         except NoSuchProcess:
             print(f'NoSuchProcess {proc_pid} in Main.correct_special_order_cell')
-        finally:
-            self.special_order_cells[index] = cell
 
     def special_order_update_data(self):
         search = self.ids.search_field.text.lower()
-        existing_search = search != ''
 
         cpu = self.order_by == "proc_cpu"
         mem = self.order_by == "proc_mem"
@@ -142,14 +140,11 @@ class Main(Screen):
 
             proc_name = proc.info['name']
 
-            in_existent_search = existing_search and search in proc_pid + proc_name.lower()
-            search_compatible = not existing_search or in_existent_search
-            existent_process = proc_pid in processes
-
-            if search_compatible and existent_process:
-                singles.append(Thread(target=self.new_special_order_cell,
-                                      args=(proc, proc_pid, proc_name, cpu, mem)))
-                singles[-1].start()
+            if (not search) or (search in f'{proc_pid}{proc_name.lower()}'):
+                new_special_order_cell_thread = Thread(target=self.new_special_order_cell,
+                                                       args=(proc, proc_pid, proc_name, cpu, mem))
+                new_special_order_cell_thread.start()
+                singles.append(new_special_order_cell_thread)
 
         for single in singles:
             single.join()
@@ -161,8 +156,10 @@ class Main(Screen):
         for index in self.visible_range:
             if index >= data_max:
                 break
-            correct_singles.append(Thread(target=self.correct_special_order_cell, args=(index, not cpu, not mem)))
-            correct_singles[-1].start()
+            correct_special_order_cell_thread = \
+                Thread(target=self.correct_special_order_cell, args=(index, not cpu, not mem))
+            correct_special_order_cell_thread.start()
+            correct_singles.append(correct_special_order_cell_thread)
         for single in correct_singles:
             single.join()
 
@@ -177,17 +174,14 @@ class Main(Screen):
         try:
             with proc.oneshot():
                 if cpu:
-                    cell["proc_cpu"] = f'{proc.cpu_percent(1) / cpus:.4f}%'
+                    cell["proc_cpu"] = proc.cpu_percent(1) / cpus
                 if mem:
-                    cell["proc_mem"] = f'{proc.memory_percent():.4f}%'
+                    cell["proc_mem"] = proc.memory_percent()
         except NoSuchProcess:
             print(f'NoSuchProcess {proc_pid} in Main.correct_order_cell')
-        finally:
-            self.order_cells[index] = cell
 
     def order_update_data(self):
         search = self.ids.search_field.text.lower()
-        existing_search = search != ''
 
         self.order_cells = []
         correct_singles = []
@@ -197,18 +191,15 @@ class Main(Screen):
         for proc_pid, proc in processes.items():
             proc_name = proc.info["name"]
 
-            in_existent_search = existing_search and search in proc_pid + proc_name.lower()
-            search_compatible = not existing_search or in_existent_search
-
-            if search_compatible:
+            if (not search) or (search in f'{proc_pid}{proc_name.lower()}'):
                 proc_exe = proc.info["exe"]
                 proc_icon = icon_path(proc_exe, proc_name)
 
                 cell = {"proc_pid": proc_pid,
                         "proc_icon": proc_icon,
                         "proc_name": proc_name,
-                        "proc_cpu": "0.0000%",
-                        "proc_mem": "0.0000%"}
+                        "proc_cpu": 0.0,
+                        "proc_mem": 0.0}
 
                 self.order_cells.append(cell)
 
@@ -222,8 +213,9 @@ class Main(Screen):
         for index in self.visible_range:
             if index >= data_max:
                 break
-            correct_singles.append(Thread(target=self.correct_order_cell, args=(index, True, True)))
-            correct_singles[-1].start()
+            correct_order_cell_thread = Thread(target=self.correct_order_cell, args=(index, True, True))
+            correct_order_cell_thread.start()
+            correct_singles.append(correct_order_cell_thread)
         for single in correct_singles:
             single.join()
 
@@ -243,8 +235,8 @@ class Main(Screen):
             cell = {"proc_pid": proc_pid,
                     "proc_icon": proc_icon,
                     "proc_name": proc_name,
-                    "proc_cpu": "0.0000%",
-                    "proc_mem": "0.0000%"}
+                    "proc_cpu": 0.0,
+                    "proc_mem": 0.0}
 
             order_cells.append(cell)
         processes_lock.release()
@@ -263,16 +255,16 @@ class Main(Screen):
 
     def always_updating_data(self):
         while True:
-            if self.order_by in ("proc_cpu", "proc_mem"):
+            if self.order_by in {"proc_cpu", "proc_mem"}:
                 self.special_order_update_data()
             else:
                 self.order_update_data()
 
     def order(self, order_by, reverse):
         if order_by == "proc_name":
-            self.key_func = lambda c: c[order_by].lower()
+            self.key_func = lambda c: c["proc_name"].lower()
         else:
-            self.key_func = lambda c: float(c[order_by].replace('%', ''))
+            self.key_func = lambda c: c[order_by]
         self.reverse = reverse
         self.order_by = order_by
 
@@ -283,11 +275,15 @@ class Main(Screen):
         self.ordered = True
 
     def set_visible_range(self):
+        rv = self.ids.rv
+        to_local = rv.to_local
+        center_x = rv.center_x
+        get_view_index_at = rv.layout_manager.get_view_index_at
         try:
-            top_pos = self.ids.rv.to_local(self.ids.rv.center_x, self.ids.rv.height)
-            top_i = self.ids.rv.layout_manager.get_view_index_at(top_pos)
-            bottom_pos = self.ids.rv.to_local(self.ids.rv.center_x, 0)
-            bottom_i = self.ids.rv.layout_manager.get_view_index_at(bottom_pos)
+            top_pos = to_local(center_x, rv.height)
+            top_i = get_view_index_at(top_pos)
+            bottom_pos = to_local(center_x, 0)
+            bottom_i = get_view_index_at(bottom_pos)
             self.visible_range = range(top_i, bottom_i + 1)
         except TypeError:
             pass  # random kivy error
@@ -302,26 +298,24 @@ class Main(Screen):
             return
         if not self.answer_lock.locked():
             Thread(target=self.answerers_control).start()
-        self.answerers.append([Thread(target=self.fast_answer_base, args=(search,)), Event()])
-        self.answerers[-1][0].start()
-        self.answerers[-1][1].set()
+        fast_thread = Thread(target=self.fast_answer_base, args=(search,))
+        fast_thread.start()
+        self.answerers.append(fast_thread)
 
     def answerers_control(self):
         self.answer_lock.acquire()
         while len(self.answerers) == 0:
             pass
         while len(self.answerers) != 0:
-            self.answerers[0][1].wait()
-            self.answerers[0][0].join()
-            del self.answerers[0]
+            fast_thread = self.answerers.pop(0)
+            fast_thread.join()
         self.answered = True
         self.answer_lock.release()
 
     def fast_answer_base(self, search):
         temp_data = []
         for cell in self.ids.rv.data:
-            search_compatible = search.lower() in cell["proc_pid"] + cell["proc_name"].lower()
-            if search_compatible:
+            if search in f'{cell["proc_pid"]}{cell["proc_name"].lower()}':
                 temp_data.append(cell)
         self.assign_data(temp_data)
         self.last_search = search
@@ -331,7 +325,6 @@ class Killer(MDApp):
     version = StringProperty(None, allownone=True)
     update = StringProperty(None, allownone=True)
     current_selection = ListProperty()
-    sorted_by = StringProperty("PID")
     selection_lock = Lock()
     # List[List[Union[str, bool, Set[str], Set[str]]]]
     selection_control = []
@@ -376,7 +369,6 @@ class Killer(MDApp):
         self.main = Main()
         self.navigator.ids.sm.add_widget(self.main)
         self.theme_cls.theme_style = "Dark" if self.dark else "Light"
-        Thread(target=self.main.order, args=(self.order_by, self.desc)).start()
 
     desc = BooleanProperty(killer_config['desc'])
 
@@ -410,7 +402,7 @@ class Killer(MDApp):
     def check_for_updates_base(self):
         if self.version is None:
             from utils import proc_version_tag, this_pid  # noqa
-            self.version = proc_version_tag(processes[str(this_pid)])
+            self.version = proc_version_tag(processes[this_pid])
         if self.version is not None:
             from utils import update_to  # noqa
             self.update = update_to(self.version, 'ntaraujo', 'killer')
@@ -458,12 +450,12 @@ class Killer(MDApp):
 
         lonely_ones_amount = len(lonely_ones)
         if lonely_ones_amount:
-            lonely_ones = sorted(lonely_ones, key=lambda x: int(x))
+            lonely_ones = sorted(lonely_ones)
             last_lonely = lonely_ones[-1]
             if lonely_ones_amount == 1:
                 selection_strings.append(f'process {last_lonely}')
             else:
-                lonely_string = "processes " + ', '.join(lonely_ones)
+                lonely_string = "processes " + ', '.join([str(lo) for lo in lonely_ones])
                 lonely_string = lonely_string.replace(f', {last_lonely}', f' and {last_lonely}')
                 selection_strings.append(lonely_string)
 
@@ -482,12 +474,12 @@ class Killer(MDApp):
 
         exceptions_amount = len(exceptions)
         if exceptions_amount:
-            exceptions = sorted(exceptions, key=lambda x: int(x))
+            exceptions = sorted(exceptions)
             last_exception = exceptions[-1]
             if exceptions_amount == 1:
                 selection_strings.append(f"except process {last_exception}")
             else:
-                exception_string = 'except processes ' + ', '.join(exceptions)
+                exception_string = 'except processes ' + ', '.join([str(ex) for ex in exceptions])
                 exception_string = exception_string.replace(f', {last_exception}', f' and {last_exception}')
                 selection_strings.append(exception_string)
 
@@ -532,7 +524,7 @@ class Killer(MDApp):
                 pids.add(pid)
             self.main.data_lock.release()
 
-            search = self.main.ids.search_field.text
+            search = self.main.ids.search_field.text.lower()
             need_to_add = True
             for _search, _check, _added, _removed in [*self.selection_control]:
                 # selected all
@@ -592,7 +584,7 @@ class Killer(MDApp):
             cell = MiniProcessCell()
             cell.proc_name = proc.info["name"]
             cell.proc_icon = icon_path('', cell.proc_name)
-            cell.proc_pid = str(proc.info["pid"])
+            cell.proc_pid = str(proc.pid)
             cell.little_font = dp(10)
             try:
                 cell.proc_user = proc.username()
@@ -603,10 +595,14 @@ class Killer(MDApp):
             finally:
                 items.append(cell)
 
-        if len(items) == 1:
+        leni = len(items)
+        if leni == 1:
             return
 
-        title = f"Was not possible to kill the following process{'es' if len(items) > 2 else ''}:"
+        if leni > 2:
+            title = "Was not possible to kill the following processes:"
+        else:
+            title = "Was not possible to kill the following process:"
 
         fails_dialog = MDDialog(
             title=title,
@@ -629,11 +625,11 @@ class MiniProcessCell(OneLineAvatarIconListItem):
 
 
 class ProcessCell(MDBoxLayout):
-    proc_pid = StringProperty()
+    proc_pid = NumericProperty()
     proc_icon = StringProperty()
     proc_name = StringProperty()
-    proc_cpu = StringProperty()
-    proc_mem = StringProperty()
+    proc_cpu = NumericProperty()
+    proc_mem = NumericProperty()
 
 
 class Navigator(NavigationLayout):
