@@ -143,7 +143,7 @@ def kill_proc_tree(parent: Process, include_parent=True):
     return fails
 
 
-def kill(proc: Type[Process]):
+def kill(proc: Process):
     if proc.pid != this_pid:
         try:
             proc.kill()
