@@ -55,7 +55,9 @@ That is why the recommended way is using the installer `killer-setup.exe`
 For updating this app, just download ![[killer-setup.exe](https://github.com/ntaraujo/killer/releases/latest/download/killer-setup.exe)](https://img.shields.io/badge/-the%20newest%20release-blue)
 and follow with the installation to the same folder used before.
 
-Is known the hotkey "Ctrl+Shift+K" may not work until the next user logon
+It's known the hotkey "Ctrl+Shift+K" may not work until the next user logon
+
+As pointed on [#2](https://github.com/ntaraujo/killer/issues/2), Killer versions < 0.7.3 can be misundertood as virus because of specific compilation problems. If you experienced this, just update the app.
 
 ## 🔧 Contributing
 
