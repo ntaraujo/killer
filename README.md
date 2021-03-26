@@ -33,7 +33,7 @@ More features coming!
 
 Tested on: Windows 10 64 bits
 
-Requirements:
+### Requirements
 * Windows >= Vista, up to date, or Windows 10
 * Open GL >= 2.0
 * 100MB of free disk space for the installer, 37MB for the standalone
@@ -45,7 +45,7 @@ This app doesn't aims to be a complete task manager, even take place of the defa
 Understand also, despite being not a complete solution, these are the requirements by the tools chosen to proceed with this project.
 Mainly the language and framework.
 
-The [standalone executable](https://github.com/ntaraujo/killer/releases/latest/download/Killer.exe):
+### The [standalone executable](https://github.com/ntaraujo/killer/releases/latest/download/Killer.exe)
 
 Despite requiring less space, it will be decompressed every time it is called, slowing down the startup and unallowing any configuration for being saved.
 That is why the recommended way is using the installer `killer-setup.exe`
