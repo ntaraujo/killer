@@ -57,7 +57,7 @@ and follow with the installation to the same folder used before.
 
 It's known the hotkey "Ctrl+Shift+K" may not work until the next user logon
 
-As pointed on [#2](https://github.com/ntaraujo/killer/issues/2), Killer versions < 0.7.3 can be misundertood as virus because of specific compilation problems. If you experienced this, just update the app.
+As pointed out in [#2](https://github.com/ntaraujo/killer/issues/2), Killer versions < 0.7.3 can be misundertood as viruses due to specific compilation problems. If you experienced this, just update the app.
 
 ## 🔧 Contributing
 
