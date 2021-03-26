@@ -31,12 +31,14 @@ More features coming!
 
 ## 📝Notes
 
-Tested on: Windows 10
+Tested on: Windows 10 64 bits
 
 Requirements:
 * Windows >= Vista, up to date, or Windows 10
 * Open GL >= 2.0
 * 100MB of free disk space for the installer, 37MB for the standalone
+
+If for any reason Killer didn't work on your Windows version/arch, please [open an issue](https://github.com/ntaraujo/killer/issues)
 
 This app doesn't aims to be a complete task manager, even take place of the default one.
 
