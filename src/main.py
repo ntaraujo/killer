@@ -1,5 +1,6 @@
 from kivymd.uix.list import OneLineAvatarIconListItem
 from kivymd.uix.navigationdrawer import NavigationLayout
+from kivymd.uix.selectioncontrol import MDCheckbox
 from psutil import process_iter, NoSuchProcess, cpu_count, AccessDenied
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
@@ -488,7 +489,7 @@ class Killer(MDApp):
         else:
             self.main.ids.selection_label.text = ''
 
-    def select_row(self, pid, active):
+    def select_row(self, pid, active, instance=None):
         if active and pid not in self.current_selection:
             self.current_selection.append(pid)
 
@@ -512,6 +513,12 @@ class Killer(MDApp):
                         # the set _removed is still linked bcs there wasn't a deepcopy, so:
                         self.selection_control.remove([_search, _check, _added, _removed])
             self.update_selection_label()
+        else:
+            return
+
+        if instance is not None:
+            instance.check_anim_in.cancel(instance)
+            instance.check_anim_out.start(instance)
 
     def select_rows(self, active):
         if active:
@@ -630,6 +637,12 @@ class ProcessCell(MDBoxLayout):
     proc_name = StringProperty()
     proc_cpu = NumericProperty()
     proc_mem = NumericProperty()
+
+
+class RVCheckBox(MDCheckbox):
+    def on_state(self, instance, value):
+        self.active = value == "down"
+        self.update_icon()
 
 
 class Navigator(NavigationLayout):

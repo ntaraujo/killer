@@ -103,12 +103,12 @@
 
 <ProcessCell>
     adaptive_height: True
-    MDCheckbox:
+    RVCheckBox:
         size_hint: None, None
         size: "48dp", app.proc_height
         pos_hint: {'center_x': .5, 'center_y': .5}
         active: root.proc_pid in app.current_selection
-        on_active: app.select_row(root.proc_pid, self.active)
+        on_active: app.select_row(root.proc_pid, self.active, self)
     AnchorLayout:
         anchor_x: "center"
         anchor_y: "center"
