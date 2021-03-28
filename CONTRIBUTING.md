@@ -27,7 +27,6 @@ Python, PIP and GIT needs to be installed and Python 3.8 inside a venv is recomm
 ```sh
 git clone https://github.com/ntaraujo/killer.git
 cd killer
-pip install kivy[base]
 pip install -r requirements.txt
 cd src
 python main.py
