@@ -8,7 +8,7 @@ from time import sleep
 from threading import Thread, Lock
 from kivy.metrics import dp
 from utils import icon_path, this_dir  # noqa
-from widgets import MiniProcessCell, ProcessCell, RVCheckBox, Navigator  # noqa
+from widgets import MiniProcessCell, ProcessCell, RVCheckBox, Navigator, MyTextInput  # noqa
 from kivy.config import Config
 
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
@@ -111,7 +111,7 @@ class Main(Screen):
 
         try:
             if cpu:
-                proc_cpu = proc.cpu_percent(1) / cpus
+                proc_cpu = proc.cpu_percent(app.refresh_interval) / cpus
             if mem:
                 proc_mem = proc.memory_percent()
         except NoSuchProcess:
@@ -131,7 +131,7 @@ class Main(Screen):
         proc = processes[proc_pid]
         try:
             if cpu:
-                cell["proc_cpu"] = proc.cpu_percent(1) / cpus
+                cell["proc_cpu"] = proc.cpu_percent(app.refresh_interval) / cpus
             if mem:
                 cell["proc_mem"] = proc.memory_percent()
         except NoSuchProcess:
@@ -186,7 +186,7 @@ class Main(Screen):
         try:
             with proc.oneshot():
                 if cpu:
-                    cell["proc_cpu"] = proc.cpu_percent(1) / cpus
+                    cell["proc_cpu"] = proc.cpu_percent(app.refresh_interval) / cpus
                 if mem:
                     cell["proc_mem"] = proc.memory_percent()
         except NoSuchProcess:
@@ -367,6 +367,8 @@ class Killer(MDApp):
 
     order_by = StringProperty(killer_config['order_by'])
 
+    refresh_interval = NumericProperty(killer_config['refresh_interval'])
+
     del StringProperty, ListProperty, NumericProperty, BooleanProperty
 
     @staticmethod
@@ -388,6 +390,10 @@ class Killer(MDApp):
     def on_order_by(self, value):
         Thread(target=self.main.order, args=(value, self.desc)).start()
         Thread(target=self.update_config, args=('order_by', value)).start()
+
+    @staticmethod
+    def on_refresh_interval(self, value):
+        Thread(target=self.update_config, args=('refresh_interval', value)).start()
 
     def __init__(self, **kwargs):
         self.icon = p_join(this_dir, 'icons\\Killer.exe.png')
