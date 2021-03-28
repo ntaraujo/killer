@@ -19,7 +19,7 @@ del Builder
 cpus = cpu_count()
 del cpu_count
 
-processes = {}
+processes = {proc.pid: proc for proc in process_iter(['name', 'exe'])}
 processes_lock = Lock()
 
 
@@ -51,11 +51,6 @@ def update_processes():
         app.update_selection_label()
 
     processes_lock.release()
-
-
-def first_update_processes():
-    global processes
-    processes = {proc.pid: proc for proc in process_iter(['name', 'exe'])}
 
 
 def always_updating_processes():
@@ -629,8 +624,6 @@ class Killer(MDApp):
 
 
 if __name__ == '__main__':
-    first_update_processes()
-
     from kivy.config import Config
 
     Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
