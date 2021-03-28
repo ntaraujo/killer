@@ -1,9 +1,7 @@
 from psutil import process_iter, NoSuchProcess, cpu_count, AccessDenied
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
-from kivy.properties import StringProperty, ListProperty, NumericProperty, BooleanProperty
 from kivy.lang import Builder
-from os.path import dirname, abspath
 from os.path import join as p_join
 from kivy.clock import mainthread, Clock
 from time import sleep
@@ -12,17 +10,17 @@ from kivy.metrics import dp
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDRaisedButton
 from typing import Dict, List
-import sys
-from utils import icon_path, kill_proc_tree, kill  # noqa
+from utils import icon_path, kill_proc_tree, kill, this_dir  # noqa
 from widgets import MiniProcessCell, ProcessCell, RVCheckBox, Navigator  # noqa
+
+Builder.load_file(p_join(this_dir, 'main.kv'))
+del Builder
+
+cpus = cpu_count()
+del cpu_count
 
 processes = {}
 processes_lock = Lock()
-
-this_dir = getattr(sys, '_MEIPASS', abspath(dirname(__file__)))
-Builder.load_file(p_join(this_dir, 'main.kv'))
-
-cpus = cpu_count()
 
 
 def update_processes():
@@ -325,6 +323,8 @@ class Main(Screen):
 
 
 class Killer(MDApp):
+    from kivy.properties import StringProperty, ListProperty, NumericProperty, BooleanProperty
+
     version = StringProperty(None, allownone=True)
     update = StringProperty(None, allownone=True)
     current_selection = ListProperty()
@@ -338,12 +338,6 @@ class Killer(MDApp):
         killer_config = load(killer_read_file)
     del killer_read_file, load
 
-    def update_config(self, key, value):
-        from json import dump
-        self.killer_config[key] = value
-        with open(self.killer_config_file, "w") as write_file:
-            dump(self.killer_config, write_file)
-
     zooms = {'0.5x': (32, 'Body2'),
              '1x': (dp(48), 'Body1')}
 
@@ -353,17 +347,33 @@ class Killer(MDApp):
     proc_style = StringProperty(zooms[z][1])
     del z
 
+    dark = BooleanProperty(killer_config['dark'])
+
+    desc = BooleanProperty(killer_config['desc'])
+
+    order_by = StringProperty(killer_config['order_by'])
+
+    del StringProperty, ListProperty, NumericProperty, BooleanProperty
+
     @staticmethod
     def on_zoom(self, value):
         self.proc_height, self.proc_style = self.zooms[value]
         Thread(target=self.update_config, args=('zoom', value)).start()
 
-    dark = BooleanProperty(killer_config['dark'])
-
     @staticmethod
     def on_dark(self, value):
         self.theme_cls.theme_style = "Dark" if value else "Light"
         Thread(target=self.update_config, args=('dark', value)).start()
+
+    @staticmethod
+    def on_desc(self, value):
+        Thread(target=self.main.order, args=(self.order_by, value)).start()
+        Thread(target=self.update_config, args=('desc', value)).start()
+
+    @staticmethod
+    def on_order_by(self, value):
+        Thread(target=self.main.order, args=(value, self.desc)).start()
+        Thread(target=self.update_config, args=('order_by', value)).start()
 
     def __init__(self, **kwargs):
         self.icon = p_join(this_dir, 'icons\\Killer.exe.png')
@@ -373,19 +383,11 @@ class Killer(MDApp):
         self.navigator.ids.sm.add_widget(self.main)
         self.theme_cls.theme_style = "Dark" if self.dark else "Light"
 
-    desc = BooleanProperty(killer_config['desc'])
-
-    @staticmethod
-    def on_desc(self, value):
-        Thread(target=self.main.order, args=(self.order_by, value)).start()
-        Thread(target=self.update_config, args=('desc', value)).start()
-
-    order_by = StringProperty(killer_config['order_by'])
-
-    @staticmethod
-    def on_order_by(self, value):
-        Thread(target=self.main.order, args=(value, self.desc)).start()
-        Thread(target=self.update_config, args=('order_by', value)).start()
+    def update_config(self, key, value):
+        from json import dump
+        self.killer_config[key] = value
+        with open(self.killer_config_file, "w") as write_file:
+            dump(self.killer_config, write_file)
 
     def build(self):
         return self.navigator
