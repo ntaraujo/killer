@@ -82,15 +82,15 @@ class Main(Screen):
         super().__init__(**kw)
 
         def on_scroll_start(instance, event):
-            if not self.data_lock.locked():
+            if not self.scroll_lock.locked():
                 if event.is_mouse_scrolling:
                     pos = instance.scroll_y
                     if pos >= 1 or pos <= 0:
                         return
-                Thread(target=self.scroll_lock.acquire).start()
+                Thread(target=self.scroll_lock.acquire, daemon=True).start()
 
         def on_scroll_stop(*args):  # noqa
-            if self.data_lock.locked():
+            if self.scroll_lock.locked():
                 Thread(target=self.scroll_lock.release).start()
 
         self.ids.rv.bind(on_scroll_start=on_scroll_start, on_scroll_stop=on_scroll_stop)
