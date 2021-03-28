@@ -200,24 +200,28 @@
                     font_style: 'H6'
                     color: app.theme_cls.opposite_bg_normal
 
-            MDBoxLayout:
-                adaptive_height: True
-                MDLabel:
-                    text: 'Zoom'
-                    halign: 'center'
-                    color: app.theme_cls.opposite_bg_normal
-                CheckZoom:
-                    zid: '0.5x'
-                MDLabel:
-                    text: '0.5x'
-                    color: app.theme_cls.opposite_bg_normal
-                CheckZoom:
-                    zid: '1x'
-                MDLabel:
-                    text: '1x'
-                    color: app.theme_cls.opposite_bg_normal
-
-            Widget
+            ScrollView:
+                scroll_type: ['bars']
+                bar_width: dp(10)
+                MDBoxLayout:
+                    orientation: "vertical"
+                    adaptive_height: True
+                    MDBoxLayout:
+                        adaptive_height: True
+                        MDLabel:
+                            text: 'Zoom'
+                            halign: 'center'
+                            color: app.theme_cls.opposite_bg_normal
+                        CheckZoom:
+                            zid: '0.5x'
+                        MDLabel:
+                            text: '0.5x'
+                            color: app.theme_cls.opposite_bg_normal
+                        CheckZoom:
+                            zid: '1x'
+                        MDLabel:
+                            text: '1x'
+                            color: app.theme_cls.opposite_bg_normal
 
             MDBoxLayout:
                 adaptive_height: True
