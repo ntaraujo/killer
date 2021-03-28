@@ -245,6 +245,7 @@
     size_hint: None, None
     size: dp(48), dp(48)
     on_active: app.zoom = self.zid
+    on_release: self.active = app.zoom == self.zid
     active: app.zoom == self.zid
     selected_color: app.theme_cls.primary_color
     unselected_color: app.theme_cls.secondary_text_color
