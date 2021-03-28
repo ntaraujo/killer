@@ -64,6 +64,7 @@ class Main(Screen):
 
     def __init__(self, **kw):
         self.data_lock = Lock()
+        self.scroll_lock = Lock()
         self.answer_lock = Lock()
         self.answered = self.ordered = False
         self.visible_range = range(0)
@@ -86,11 +87,11 @@ class Main(Screen):
                     pos = instance.scroll_y
                     if pos >= 1 or pos <= 0:
                         return
-                Thread(target=self.data_lock.acquire).start()
+                Thread(target=self.scroll_lock.acquire).start()
 
         def on_scroll_stop(*args):  # noqa
             if self.data_lock.locked():
-                Thread(target=self.data_lock.release).start()
+                Thread(target=self.scroll_lock.release).start()
 
         self.ids.rv.bind(on_scroll_start=on_scroll_start, on_scroll_stop=on_scroll_stop)
 
@@ -260,7 +261,8 @@ class Main(Screen):
         if not self.answer_lock.locked():
             if not self.answered and not self.ordered:
                 with self.data_lock:
-                    self.assign_data(new_data)
+                    with self.scroll_lock:
+                        self.assign_data(new_data)
             else:
                 self.answered = self.ordered = False
 
