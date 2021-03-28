@@ -80,6 +80,20 @@ class Main(Screen):
         self.reverse = Killer.killer_config["desc"]
         super().__init__(**kw)
 
+        def on_scroll_start(instance, event):
+            if not self.data_lock.locked():
+                if event.is_mouse_scrolling:
+                    pos = instance.scroll_y
+                    if pos >= 1 or pos <= 0:
+                        return
+                Thread(target=self.data_lock.acquire).start()
+
+        def on_scroll_stop(*args):
+            if self.data_lock.locked():
+                Thread(target=self.data_lock.release).start()
+
+        self.ids.rv.bind(on_scroll_start=on_scroll_start, on_scroll_stop=on_scroll_stop)
+
     @mainthread
     def assign_data(self, data):
         self.ids.rv.data = data
