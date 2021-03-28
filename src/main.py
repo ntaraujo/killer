@@ -1,6 +1,3 @@
-from kivymd.uix.list import OneLineAvatarIconListItem
-from kivymd.uix.navigationdrawer import NavigationLayout
-from kivymd.uix.selectioncontrol import MDCheckbox
 from psutil import process_iter, NoSuchProcess, cpu_count, AccessDenied
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
@@ -11,13 +8,13 @@ from os.path import join as p_join
 from kivy.clock import mainthread, Clock
 from time import sleep
 from threading import Thread, Lock
-from kivymd.uix.boxlayout import MDBoxLayout
 from kivy.metrics import dp
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.button import MDRaisedButton
 from typing import Dict, List
 import sys
 from utils import icon_path, kill_proc_tree, kill  # noqa
+from widgets import MiniProcessCell, ProcessCell, RVCheckBox, Navigator  # noqa
 
 processes = {}
 processes_lock = Lock()
@@ -627,32 +624,6 @@ class Killer(MDApp):
         fails_dialog.ids.title.color = self.theme_cls.opposite_bg_normal
 
         fails_dialog.open()
-
-
-class MiniProcessCell(OneLineAvatarIconListItem):
-    proc_pid = StringProperty()
-    proc_icon = StringProperty()
-    proc_name = StringProperty()
-    proc_user = StringProperty()
-    little_font = NumericProperty(None)
-
-
-class ProcessCell(MDBoxLayout):
-    proc_pid = NumericProperty()
-    proc_icon = StringProperty()
-    proc_name = StringProperty()
-    proc_cpu = NumericProperty()
-    proc_mem = NumericProperty()
-
-
-class RVCheckBox(MDCheckbox):
-    def on_state(self, instance, value):
-        self.active = value == "down"
-        self.update_icon()
-
-
-class Navigator(NavigationLayout):
-    pass
 
 
 if __name__ == '__main__':
