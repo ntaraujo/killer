@@ -629,7 +629,6 @@ class Killer(MDApp):
         fails_dialog.open()
 
 
+app = Killer()
 if __name__ == '__main__':
-
-    app = Killer()
     app.run()
