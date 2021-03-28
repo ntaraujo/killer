@@ -7,19 +7,27 @@ from os.path import exists as p_exists
 from win32ui import CreateDCFromHandle, CreateBitmap
 from win32gui import ExtractIconEx, DestroyIcon, GetDC  # noqa
 from PIL import Image
-from subprocess import Popen, PIPE
 from os import PathLike, getpid
-from typing import Union, Dict, Callable, Any, List, Optional, Type, Collection, Tuple
+from typing import Union, Dict, Callable, Any, List, Optional, Collection, Tuple
 from pywintypes import error  # noqa
 from bisect import bisect_left, bisect_right
 import sys
 from time import perf_counter
-from requests import get as get_request
 
 this_pid = getpid()
+del getpid
+
 path_type = Union[str, bytes, PathLike]
+del PathLike
+
 this_dir: path_type = getattr(sys, '_MEIPASS', abspath(dirname(__file__)))
+del sys, abspath, dirname
+
 default_icon_path: path_type = p_join(this_dir, 'icons', 'default.png')
+
+funcs_results: Dict[Callable[[Any], Any], float] = {}
+custom_results: Dict[str, List[Optional[Union[float, int]]]] = {}
+del Dict, List
 
 
 def get_version_number(exe: path_type) -> Optional[Tuple[int, int, int, int]]:
@@ -55,6 +63,7 @@ def proc_version_tag(proc: Process):
 
 
 def latest_version(user: str, repo: str) -> str:
+    from requests import get as get_request
     return get_request(f"https://api.github.com/repos/{user}/{repo}/releases/latest").json()["tag_name"]
 
 
@@ -108,6 +117,8 @@ def icon_path(exe: path_type, name: str):
 
 
 def is_responding(pid: int):
+    from subprocess import Popen, PIPE
+
     cmd = f'tasklist /FI "PID eq {pid}" /FI "STATUS eq running"'
     status = Popen(cmd, stdout=PIPE).stdout.read()
     return str(pid) in str(status)
@@ -154,10 +165,6 @@ def kill(proc: Process):
             return False
     else:
         return False
-
-
-funcs_results: Dict[Callable[[Any], Any], float] = {}
-custom_results: Dict[str, List[Optional[Union[float, int]]]] = {}
 
 
 def timer(function: Union[Callable[[Any], Any], str]) -> Optional[Callable[[Any], Any]]:

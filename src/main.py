@@ -9,6 +9,10 @@ from threading import Thread, Lock
 from kivy.metrics import dp
 from utils import icon_path, this_dir  # noqa
 from widgets import MiniProcessCell, ProcessCell, RVCheckBox, Navigator  # noqa
+from kivy.config import Config
+
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
+del Config
 
 Builder.load_file(p_join(this_dir, 'main.kv'))
 del Builder
@@ -48,9 +52,6 @@ def update_processes():
         app.update_selection_label()
 
     processes_lock.release()
-
-
-del process_iter
 
 
 def always_updating_processes():
@@ -629,9 +630,6 @@ class Killer(MDApp):
 
 
 if __name__ == '__main__':
-    from kivy.config import Config
-
-    Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
     app = Killer()
     app.run()
