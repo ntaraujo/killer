@@ -88,7 +88,7 @@ class Main(Screen):
                         return
                 Thread(target=self.data_lock.acquire).start()
 
-        def on_scroll_stop(*args):
+        def on_scroll_stop(*args):  # noqa
             if self.data_lock.locked():
                 Thread(target=self.data_lock.release).start()
 
@@ -308,16 +308,21 @@ class Main(Screen):
         if search == "":
             return
         if not self.answer_lock.locked():
-            Thread(target=self.answerers_control).start()
+            from threading import Event
+            start_event = Event()
+            Thread(target=self.answerers_control, args=(start_event,)).start()
+        else:
+            start_event = None
         fast_thread = Thread(target=self.fast_answer_base, args=(search,))
         fast_thread.start()
         self.answerers.append(fast_thread)
+        if start_event is not None:
+            start_event.set()
 
-    def answerers_control(self):
+    def answerers_control(self, start_event):
         self.answer_lock.acquire()
-        while len(self.answerers) == 0:
-            pass
-        while len(self.answerers) != 0:
+        start_event.wait()
+        while self.answerers:
             fast_thread = self.answerers.pop(0)
             fast_thread.join()
         self.answered = True
