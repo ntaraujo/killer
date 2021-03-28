@@ -3,14 +3,11 @@ from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen
 from kivy.lang import Builder
 from os.path import join as p_join
-from kivy.clock import mainthread, Clock
+from kivy.clock import mainthread
 from time import sleep
 from threading import Thread, Lock
 from kivy.metrics import dp
-from kivymd.uix.dialog import MDDialog
-from kivymd.uix.button import MDRaisedButton
-from typing import Dict, List
-from utils import icon_path, kill_proc_tree, kill, this_dir  # noqa
+from utils import icon_path, this_dir  # noqa
 from widgets import MiniProcessCell, ProcessCell, RVCheckBox, Navigator  # noqa
 
 Builder.load_file(p_join(this_dir, 'main.kv'))
@@ -51,6 +48,9 @@ def update_processes():
         app.update_selection_label()
 
     processes_lock.release()
+
+
+del process_iter
 
 
 def always_updating_processes():
@@ -145,8 +145,7 @@ class Main(Screen):
         for single in singles:
             single.join()
 
-        self.special_order_cells: List[Dict[str, str]] = \
-            sorted(self.special_order_cells, key=self.key_func, reverse=self.reverse)
+        self.special_order_cells = sorted(self.special_order_cells, key=self.key_func, reverse=self.reverse)
         data_max = len(self.special_order_cells)
 
         for index in self.visible_range:
@@ -389,6 +388,7 @@ class Killer(MDApp):
 
     def on_start(self):
         self.main.first_update_data()
+        from kivy.clock import Clock
         Clock.schedule_once(self.search_focus)
         Thread(target=self.main.always_updating_data, daemon=True).start()
         Thread(target=self.main.always_setting_visible_range, daemon=True).start()
@@ -559,6 +559,7 @@ class Killer(MDApp):
         self.update_selection_label()
 
     def kill_selected(self):
+        from utils import kill  # noqa
         fails = []
         with processes_lock:
             for pid in self.current_selection:
@@ -568,6 +569,7 @@ class Killer(MDApp):
         self.show_fails(fails)
 
     def kill_selected_and_children(self):
+        from utils import kill_proc_tree  # noqa
         fails = []
         with processes_lock:
             for pid in self.current_selection:
@@ -610,6 +612,9 @@ class Killer(MDApp):
             title = "Was not possible to kill the following processes:"
         else:
             title = "Was not possible to kill the following process:"
+
+        from kivymd.uix.dialog import MDDialog
+        from kivymd.uix.button import MDRaisedButton
 
         fails_dialog = MDDialog(
             title=title,
