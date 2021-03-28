@@ -61,16 +61,17 @@ def always_updating_processes():
 
 
 class Main(Screen):
-    data_lock = Lock()
-    answer_lock = Lock()
-    answered = ordered = False
-    visible_range = range(0)
-    special_order_cells = []
-    order_cells = []
-    answerers = []
-    last_search = None
 
     def __init__(self, **kw):
+        self.data_lock = Lock()
+        self.answer_lock = Lock()
+        self.answered = self.ordered = False
+        self.visible_range = range(0)
+        self.special_order_cells = []
+        self.order_cells = []
+        self.answerers = []
+        self.last_search = None
+
         self.order_by = order_by = Killer.killer_config["order_by"]
         if order_by == "proc_name":
             self.key_func = lambda c: c["proc_name"].lower()
@@ -323,9 +324,6 @@ class Killer(MDApp):
     version = StringProperty(None, allownone=True)
     update = StringProperty(None, allownone=True)
     current_selection = ListProperty()
-    selection_lock = Lock()
-    # List[List[Union[str, bool, Set[str], Set[str]]]]
-    selection_control = []
 
     from json import load
     killer_config_file = p_join(this_dir, 'killer_config.json')
@@ -373,6 +371,10 @@ class Killer(MDApp):
     def __init__(self, **kwargs):
         self.icon = p_join(this_dir, 'icons\\Killer.exe.png')
         super().__init__(**kwargs)
+        self.selection_lock = Lock()
+        # List[List[Union[str, bool, Set[str], Set[str]]]]
+        self.selection_control = []
+
         self.navigator = Navigator()
         self.main = Main()
         self.navigator.ids.sm.add_widget(self.main)
