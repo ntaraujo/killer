@@ -43,12 +43,17 @@ def update_processes():
         if (proc_now is None) or (proc.info['name'] != proc_now.info['name']):
             processes[pid] = proc
 
+    update_label = False
     for pid in [*processes]:
         if pid not in temp_processes:
-            app.select_row(pid, False)
+            app.select_row(pid, False, label=False)
             if pid in app.current_selection:
                 app.current_selection.remove(pid)
             del processes[pid]
+            update_label = True
+
+    if update_label:
+        app.update_selection_label()
 
     processes_lock.release()
 
@@ -489,7 +494,7 @@ class Killer(MDApp):
         else:
             self.main.ids.selection_label.text = ''
 
-    def select_row(self, pid, active, instance=None):
+    def select_row(self, pid, active, instance=None, label=True):
         if active and pid not in self.current_selection:
             self.current_selection.append(pid)
 
@@ -501,7 +506,6 @@ class Killer(MDApp):
                     changed = True
             if not changed:  # pid was not related to a previous search
                 self.selection_control.append(["", False, {pid}, set()])  # _search is "" bcs doesn't matter
-            self.update_selection_label()
         elif not active and pid in self.current_selection:
             self.current_selection.remove(pid)
 
@@ -512,13 +516,15 @@ class Killer(MDApp):
                         # all related PIDs were unmarked, doesn't matter _check
                         # the set _removed is still linked bcs there wasn't a deepcopy, so:
                         self.selection_control.remove([_search, _check, _added, _removed])
-            self.update_selection_label()
         else:
             return
 
         if instance is not None:
             instance.check_anim_in.cancel(instance)
             instance.check_anim_out.start(instance)
+
+        if label:
+            self.update_selection_label()
 
     def select_rows(self, active):
         if active:
