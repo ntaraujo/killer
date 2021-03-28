@@ -47,19 +47,23 @@ If it works, you are ready for making changes to the source code.
 # About the current files
 
 ```
-killer - the project
+killer/ - the project
   |
-  data - images used by PyInstaller, Inno Setup and GitHub
+  data/ - images used by PyInstaller, Inno Setup and GitHub
   |
-  src - the important files
+  src/ - the important files
     |
-    icons - pre-saved icons of Windows processes to be used
+    icons/ - pre-saved icons of Windows processes to be used
     | |
     | Killer.exe.png - icon for the main.py window
+    |
+    killer_config.json - file with user preferences
     |
     main.kv - most of the app design (view)
     |
     main.py - the jack of all trades (control)
     |
     utils.py - functions which can be in another file not main.py (model)
+    |
+    widgets.py - widgets which can be in another file not main.py
 ```
