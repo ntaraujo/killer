@@ -1,4 +1,4 @@
-Kivy==2.0.0
+kivy[base] @ https://github.com/kivy/kivy/archive/cb2ba4d22d4d9354851238998c5ec8fb358486ba.zip
 Pillow==8.1.1
 psutil==5.8.0
 pypiwin32==223
