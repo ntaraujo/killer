@@ -8,7 +8,7 @@ from time import sleep
 from threading import Thread, Lock
 from kivy.metrics import dp
 from utils import icon_path, this_dir  # noqa
-from widgets import MiniProcessCell, ProcessCell, RVCheckBox, Navigator, MyTextInput  # noqa
+from widgets import MiniProcessCell, ProcessCell, RVCheckBox, Navigator, RefreshInput  # noqa
 from kivy.config import Config
 
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')

@@ -1,4 +1,5 @@
 from kivy.animation import Animation
+from kivy.base import EventLoop
 from kivy.graphics.vertex_instructions import Rectangle
 from kivy.properties import StringProperty, NumericProperty
 from kivy.uix.textinput import FL_IS_LINEBREAK
@@ -111,12 +112,6 @@ class MyTextInput(MDTextField):
         lbl = self._create_line_label(text)
         self.minimum_width = max(self.minimum_width, lbl.width + self.padding[0] + self.padding[2])
 
-        try:
-            assert 0 <= float(value) <= 10
-            self.error = False
-        except (AssertionError, ValueError):
-            self.error = True
-
     def on_error(self, instance, value):
         _current_hint_text_color = _current_line_color = self.error_color if value else self.line_color_focus
 
@@ -125,3 +120,60 @@ class MyTextInput(MDTextField):
             _current_hint_text_color=_current_hint_text_color,
             _current_line_color=_current_line_color,
         ).start(self)
+
+
+class RefreshInput(MyTextInput):
+    def insert_text(self, substring, from_undo=False):
+        if self.readonly or not substring or not self._lines:
+            return
+
+        if isinstance(substring, bytes):
+            substring = substring.decode('utf8')
+
+        if self.replace_crlf:
+            substring = substring.replace(u'\r\n', u'\n')
+
+        self._hide_handles(EventLoop.window)
+
+        if not from_undo and self.multiline and self.auto_indent \
+                and substring == u'\n':
+            substring = self._auto_indent(substring)
+
+        cc, cr = self.cursor
+        sci = self.cursor_index
+        ci = sci()
+        text = self._lines[cr]
+        len_str = len(substring)
+        new_text = text[:cc] + substring + text[cc:]
+
+        if new_text:
+            try:
+                number = float(new_text)
+                if not (0 <= number <= 10):
+                    return
+            except ValueError:
+                return
+
+        self._set_line_text(cr, new_text)
+
+        wrap = (self._get_text_width(
+            new_text,
+            self.tab_width,
+            self._label_cached) > (self.width - self.padding[0] -
+                                   self.padding[2]))
+        if len_str > 1 or substring == u'\n' or wrap:
+            # Avoid refreshing text on every keystroke.
+            # Allows for faster typing of text when the amount of text in
+            # TextInput gets large.
+
+            start, finish, lines, lineflags, len_lines = \
+                self._get_line_from_cursor(cr, new_text)
+            # calling trigger here could lead to wrong cursor positioning
+            # and repeating of text when keys are added rapidly in a automated
+            # fashion. From Android Keyboard for example.
+            self._refresh_text_from_property('insert', start, finish, lines,
+                                             lineflags, len_lines)
+
+        self.cursor = self.get_cursor_from_index(ci + len_str)
+        # handle undo and redo
+        self._set_unredo_insert(ci, ci + len_str, substring, from_undo)
