@@ -232,9 +232,7 @@
                             text: f'{app.refresh_interval}'
                             size_hint_x: None
                             width: self.minimum_width + dp(10)
-                            on_text:
-                                self.error = not self.text.replace('.', '').isnumeric()
-                                app.refresh_interval = app.refresh_interval if self.error else self.text
+                            on_text: app.refresh_interval = app.refresh_interval if self.error else self.text
 
             MDBoxLayout:
                 adaptive_height: True

@@ -103,9 +103,15 @@ class MyTextInput(MDTextField):
         # with the new text don't forget to update graphics again
         self._trigger_update_graphics()
 
-    def on_text(self, *args):
+    def on_text(self, instance, value):
         # added to update minimum width on each change
         cc, cr = self.cursor
         text = self._lines[cr]
         lbl = self._create_line_label(text)
         self.minimum_width = max(self.minimum_width, lbl.width + self.padding[0] + self.padding[2])
+
+        try:
+            assert 0 <= float(value) <= 10
+            self.error = False
+        except (AssertionError, ValueError):
+            self.error = True
