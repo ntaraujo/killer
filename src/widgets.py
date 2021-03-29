@@ -14,7 +14,7 @@ class MiniProcessCell(OneLineAvatarIconListItem):
     proc_pid = StringProperty()
     proc_icon = StringProperty()
     proc_name = StringProperty()
-    proc_user = StringProperty()
+    proc_user = StringProperty("N/A")
     little_font = NumericProperty(None)
 
 
