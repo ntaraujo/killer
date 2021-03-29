@@ -1,3 +1,4 @@
+from kivy.animation import Animation
 from kivy.graphics.vertex_instructions import Rectangle
 from kivy.properties import StringProperty, NumericProperty
 from kivy.uix.textinput import FL_IS_LINEBREAK
@@ -115,3 +116,12 @@ class MyTextInput(MDTextField):
             self.error = False
         except (AssertionError, ValueError):
             self.error = True
+
+    def on_error(self, instance, value):
+        _current_hint_text_color = _current_line_color = self.error_color if value else self.line_color_focus
+
+        Animation(
+            duration=0.2,
+            _current_hint_text_color=_current_hint_text_color,
+            _current_line_color=_current_line_color,
+        ).start(self)
