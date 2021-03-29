@@ -206,11 +206,11 @@
                 MDBoxLayout:
                     orientation: "vertical"
                     adaptive_height: True
+                    padding: dp(20), 0, 0, 0
                     MDBoxLayout:
                         adaptive_height: True
                         MDLabel:
                             text: 'Zoom'
-                            halign: 'center'
                             color: app.theme_cls.opposite_bg_normal
                         CheckZoom:
                             zid: '0.5x'
@@ -222,6 +222,18 @@
                         MDLabel:
                             text: '1x'
                             color: app.theme_cls.opposite_bg_normal
+                    MDBoxLayout:
+                        adaptive_height: True
+                        padding: 0, 0, dp(20), 0
+                        MDLabel:
+                            text: 'Refresh interval' if refresh_interval.text else f'Refresh interval ({app.refresh_interval})'
+                            color: app.theme_cls.opposite_bg_normal
+                        RefreshInput:
+                            id: refresh_interval
+                            text: f'{app.refresh_interval}'
+                            size_hint_x: None
+                            width: self.minimum_width if self.text else dp(10)
+                            on_text: app.refresh_interval = self.text if self.text else app.refresh_interval
 
             MDBoxLayout:
                 adaptive_height: True
