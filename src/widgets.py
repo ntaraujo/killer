@@ -2,7 +2,7 @@ from kivy.animation import Animation
 from kivy.base import EventLoop
 from kivy.graphics.vertex_instructions import Rectangle
 from kivy.properties import StringProperty, NumericProperty
-from kivy.uix.textinput import FL_IS_LINEBREAK
+from kivy.uix.textinput import FL_IS_LINEBREAK  # noqa
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.list import OneLineAvatarIconListItem
 from kivymd.uix.navigationdrawer import NavigationLayout
@@ -50,12 +50,13 @@ class MyTextInput(MDTextField):
 
         # Refresh all the lines from a new text.
         # By using cache in internal functions, this method should be fast.
-        mode = 'all'
         if len(largs) > 1:
             mode, start, finish, _lines, _lines_flags, len_lines = largs
             # start = max(0, start)
             cursor = None
         else:
+            mode = 'all'
+            start = finish = _lines = _lines_flags = len_lines = None
             cursor = self.cursor_index()
             _lines, self._lines_flags = self._split_smart(text)
         _lines_labels = []
@@ -112,8 +113,8 @@ class MyTextInput(MDTextField):
         lbl = self._create_line_label(text)
         self.minimum_width = max(self.minimum_width, lbl.width + self.padding[0] + self.padding[2])
 
-    def on_error(self, instance, value):
-        _current_hint_text_color = _current_line_color = self.error_color if value else self.line_color_focus
+    def on_error(self, *args):
+        _current_hint_text_color = _current_line_color = self.error_color if args[1] else self.line_color_focus
 
         Animation(
             duration=0.2,
