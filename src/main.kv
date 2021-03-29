@@ -206,11 +206,11 @@
                 MDBoxLayout:
                     orientation: "vertical"
                     adaptive_height: True
+                    padding: dp(20), 0, 0, 0
                     MDBoxLayout:
                         adaptive_height: True
                         MDLabel:
                             text: 'Zoom'
-                            halign: 'center'
                             color: app.theme_cls.opposite_bg_normal
                         CheckZoom:
                             zid: '0.5x'
@@ -227,7 +227,6 @@
                         padding: 0, 0, dp(20), 0
                         MDLabel:
                             text: 'Refresh interval'
-                            halign: 'center'
                             color: app.theme_cls.opposite_bg_normal
                         MyTextInput:
                             text: f'{app.refresh_interval}'
