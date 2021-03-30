@@ -93,7 +93,14 @@ class Main(Screen):
             if self.scroll_lock.locked():
                 Thread(target=self.scroll_lock.release).start()
 
-        self.ids.rv.bind(on_scroll_start=on_scroll_start, on_scroll_stop=on_scroll_stop)
+        def on_touch_up(*args):  # noqa
+            if self.scroll_lock.locked():
+                Thread(target=self.scroll_lock.release).start()
+
+        self.ids.rv.bind(on_scroll_start=on_scroll_start,
+                         on_scroll_stop=on_scroll_stop,
+                         on_touch_up=on_touch_up
+                         )
 
     @mainthread
     def assign_data(self, data):
