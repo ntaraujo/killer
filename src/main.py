@@ -93,7 +93,14 @@ class Main(Screen):
             if self.scroll_lock.locked():
                 Thread(target=self.scroll_lock.release).start()
 
-        self.ids.rv.bind(on_scroll_start=on_scroll_start, on_scroll_stop=on_scroll_stop)
+        def on_touch_up(*args):  # noqa
+            if self.scroll_lock.locked():
+                Thread(target=self.scroll_lock.release).start()
+
+        self.ids.rv.bind(on_scroll_start=on_scroll_start,
+                         on_scroll_stop=on_scroll_stop,
+                         on_touch_up=on_touch_up
+                         )
 
         self.get_mem = lambda p: 0
         self.get_fmt_mem = lambda m: ""
@@ -138,7 +145,7 @@ class Main(Screen):
             if mem:
                 proc_mem = self.get_mem(proc)
         except NoSuchProcess:
-            print(f'NoSuchProcess {proc_pid} in Main.new_special_order_cell')
+            pass
 
         cell = {"proc_pid": proc_pid,
                 "proc_icon": proc_icon,
@@ -158,7 +165,7 @@ class Main(Screen):
             if mem:
                 cell["proc_mem"] = self.get_mem(proc)
         except NoSuchProcess:
-            print(f'NoSuchProcess {proc_pid} in Main.correct_special_order_cell')
+            pass
 
     def special_order_update_data(self):
         search = self.ids.search_field.text.lower()
@@ -213,7 +220,7 @@ class Main(Screen):
                 if mem:
                     cell["proc_mem"] = self.get_mem(proc)
         except NoSuchProcess:
-            print(f'NoSuchProcess {proc_pid} in Main.correct_order_cell')
+            pass
 
     def order_update_data(self):
         search = self.ids.search_field.text.lower()
