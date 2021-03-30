@@ -1,10 +1,13 @@
 from kivy.animation import Animation
 from kivy.base import EventLoop
 from kivy.graphics.vertex_instructions import Rectangle
-from kivy.properties import StringProperty, NumericProperty
+from kivy.properties import StringProperty, NumericProperty, ListProperty, ObjectProperty
+from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.textinput import FL_IS_LINEBREAK  # noqa
 from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.label import MDLabel
 from kivymd.uix.list import OneLineAvatarIconListItem
+from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.navigationdrawer import NavigationLayout
 from kivymd.uix.selectioncontrol import MDCheckbox
 from kivymd.uix.textfield import MDTextField
@@ -178,3 +181,50 @@ class RefreshInput(MyTextInput):
         self.cursor = self.get_cursor_from_index(ci + len_str)
         # handle undo and redo
         self._set_unredo_insert(ci, ci + len_str, substring, from_undo)
+
+
+class LButton(ButtonBehavior, MDLabel):
+    menu_items = ListProperty()
+    width_mult = NumericProperty(1)
+    selected_item = ObjectProperty()
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.register_event_type('on_left_press')
+        self.register_event_type('on_right_press')
+        self.menu = None
+        self.bind(width_mult=self._create_menu, menu_items=self._create_menu)
+
+    def _create_menu(self, *args):  # noqa
+        if not self.menu_items:
+            return
+
+        if self.menu is not None:
+            self.menu.dismiss()
+
+        self.menu = MDDropdownMenu(
+            caller=self,
+            items=self.menu_items,
+            width_mult=self.width_mult,
+            callback=self._menu_callback
+        )
+
+    def _menu_callback(self, instance_menu_item):
+        self.selected_item = instance_menu_item
+
+    def on_touch_down(self, touch):
+        if super().on_touch_down(touch):
+            if touch.button == "left":
+                self.dispatch('on_left_press')
+            elif touch.button == "right":
+                self.dispatch('on_right_press')
+            return True
+        else:
+            return False
+
+    def on_left_press(self):
+        pass
+
+    def on_right_press(self):
+        if self.menu is not None:
+            self.menu.open()

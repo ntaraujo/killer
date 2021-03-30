@@ -65,6 +65,9 @@
             LButton:
                 text: "Memory Usage"
                 order_name: 'proc_mem'
+                menu_items: [{'text': t} for t in {'values', 'percentages'}]
+                width_mult: 4
+                on_selected_item: app.memory_as = self.selected_item.text
 
         RecycleView:
             id: rv
@@ -135,12 +138,12 @@
         color: app.theme_cls.opposite_bg_normal
         font_style: app.proc_style
     MDLabel:
-        text: "{:.4f}%".format(root.proc_mem)
+        text: app.main.get_fmt_mem(root.proc_mem)
         halign: "center"
         color: app.theme_cls.opposite_bg_normal
         font_style: app.proc_style
 
-<LButton@ButtonBehavior+MDLabel>
+<LButton>
     order_name: 'proc_pid'
     ordered: self.order_name == app.order_by
     canvas.before:
@@ -149,7 +152,7 @@
         Rectangle:
             pos: self.pos
             size: self.size
-    on_release:
+    on_left_press:
         app.desc = not app.desc if self.ordered else app.desc
         app.order_by = self.order_name
     halign: "center"

@@ -1,1 +1,1 @@
-{"zoom": "0.5x", "dark": false, "desc": false, "order_by": "proc_pid", "refresh_interval": 1.0}
+{"zoom": "0.5x", "dark": false, "desc": false, "order_by": "proc_pid", "refresh_interval": 1.0, "memory_as": "values"}

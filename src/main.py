@@ -95,6 +95,29 @@ class Main(Screen):
 
         self.ids.rv.bind(on_scroll_start=on_scroll_start, on_scroll_stop=on_scroll_stop)
 
+        self.get_mem = lambda p: 0
+        self.get_fmt_mem = lambda m: ""
+        self.update_memory_as(Killer.killer_config['memory_as'])
+
+    def update_memory_as(self, value):
+        if value == "values":
+            def get_mem(p):
+                try:
+                    return p.memory_full_info().uss
+                except AccessDenied:
+                    return 0.0
+            self.get_mem = get_mem
+
+            def get_fmt_mem(m):
+                for unit in ['', 'K', 'M', 'G', 'T', 'P']:
+                    if m < 1024:
+                        return f"{m:.2f}{unit}B"
+                    m /= 1024
+            self.get_fmt_mem = get_fmt_mem
+        else:
+            self.get_mem = lambda p: p.memory_percent()
+            self.get_fmt_mem = lambda m: f"{m:.4f}%"
+
     @mainthread
     def assign_data(self, data):
         self.ids.rv.data = data
@@ -113,7 +136,7 @@ class Main(Screen):
             if cpu:
                 proc_cpu = proc.cpu_percent(app.refresh_interval) / cpus
             if mem:
-                proc_mem = proc.memory_percent()
+                proc_mem = self.get_mem(proc)
         except NoSuchProcess:
             print(f'NoSuchProcess {proc_pid} in Main.new_special_order_cell')
 
@@ -133,7 +156,7 @@ class Main(Screen):
             if cpu:
                 cell["proc_cpu"] = proc.cpu_percent(app.refresh_interval) / cpus
             if mem:
-                cell["proc_mem"] = proc.memory_percent()
+                cell["proc_mem"] = self.get_mem(proc)
         except NoSuchProcess:
             print(f'NoSuchProcess {proc_pid} in Main.correct_special_order_cell')
 
@@ -188,7 +211,7 @@ class Main(Screen):
                 if cpu:
                     cell["proc_cpu"] = proc.cpu_percent(app.refresh_interval) / cpus
                 if mem:
-                    cell["proc_mem"] = proc.memory_percent()
+                    cell["proc_mem"] = self.get_mem(proc)
         except NoSuchProcess:
             print(f'NoSuchProcess {proc_pid} in Main.correct_order_cell')
 
@@ -369,6 +392,8 @@ class Killer(MDApp):
 
     refresh_interval = NumericProperty(killer_config['refresh_interval'])
 
+    memory_as = StringProperty(killer_config['memory_as'])
+
     del StringProperty, ListProperty, NumericProperty, BooleanProperty
 
     @staticmethod
@@ -394,6 +419,11 @@ class Killer(MDApp):
     @staticmethod
     def on_refresh_interval(self, value):
         Thread(target=self.update_config, args=('refresh_interval', value)).start()
+
+    @staticmethod
+    def on_memory_as(self, value):
+        Thread(target=self.update_config, args=('memory_as', value)).start()
+        self.main.update_memory_as(value)
 
     def __init__(self, **kwargs):
         self.icon = p_join(this_dir, 'icons\\Killer.exe.png')
