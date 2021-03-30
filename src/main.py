@@ -122,7 +122,7 @@ class Main(Screen):
             if mem:
                 proc_mem = proc.memory_percent()
         except NoSuchProcess:
-            print(f'NoSuchProcess {proc_pid} in Main.new_special_order_cell')
+            pass
 
         cell = {"proc_pid": proc_pid,
                 "proc_icon": proc_icon,
@@ -142,7 +142,7 @@ class Main(Screen):
             if mem:
                 cell["proc_mem"] = proc.memory_percent()
         except NoSuchProcess:
-            print(f'NoSuchProcess {proc_pid} in Main.correct_special_order_cell')
+            pass
 
     def special_order_update_data(self):
         search = self.ids.search_field.text.lower()
@@ -197,7 +197,7 @@ class Main(Screen):
                 if mem:
                     cell["proc_mem"] = proc.memory_percent()
         except NoSuchProcess:
-            print(f'NoSuchProcess {proc_pid} in Main.correct_order_cell')
+            pass
 
     def order_update_data(self):
         search = self.ids.search_field.text.lower()
