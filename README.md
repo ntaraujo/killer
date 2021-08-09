@@ -1,6 +1,6 @@
 <h1 align="center">Killer</h1>
 
-<p align="center"><a href="https://github.com/ntaraujo/killer/blob/master/LICENSE"><img src="https://img.shields.io/github/license/ntaraujo/killer.svg" alt="License"></a>
+<p align="center"><a href="https://github.com/ntaraujo/killer/blob/main/LICENSE"><img src="https://img.shields.io/github/license/ntaraujo/killer.svg" alt="License"></a>
 <a href="https://github.com/ntaraujo/killer/issues"><img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg" alt="Contributions Welcome"></a>
 <a href="https://github.com/ntaraujo/killer/releases/latest"><img src="https://img.shields.io/github/downloads/ntaraujo/killer/total.svg" alt="Github All Releases"></a></p>
 <p align="center"><a href="https://github.com/ntaraujo/killer/releases/latest/download/killer-setup.exe"><img src="https://img.shields.io/badge/-download%20link-blue?logo=windows" alt="killer-setup.exe"></a>
@@ -68,4 +68,4 @@ As pointed out in [#2](https://github.com/ntaraujo/killer/issues/2), Killer vers
 
 ## 🔧 Contributing
 
-Details on how to contribute to this project [here](https://github.com/ntaraujo/killer/blob/master/CONTRIBUTING.md).
+Details on how to contribute to this project [here](https://github.com/ntaraujo/killer/blob/main/CONTRIBUTING.md).
