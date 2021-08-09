@@ -14,7 +14,7 @@
 
 <p align="center"><img src="https://github.com/ntaraujo/killer/blob/main/data/samples/light.PNG" alt="Killer"></p>
 
-<h1 align="center"><a href="https://discord.gg/MKG6qgJ964">⬇Download here</a> · <a href="https://github.com/ntaraujo/killer/releases/latest/download/killer-setup.exe">👋 Join our discord</a></h1>
+<h1 align="center"><a href="https://github.com/ntaraujo/killer/releases/latest/download/killer-setup.exe">⬇Download here</a> · <a href="https://discord.gg/MKG6qgJ964">👋 Join our discord</a></h1>
 
 Tired of trying to kill processes with the default Windows Task Manager? Selecting one by one? So this is for you.
 
@@ -59,7 +59,7 @@ That is why the recommended way is using the installer `killer-setup.exe`
 
 ## ⬆️Update
 
-For updating this app, just download ![[killer-setup.exe](https://github.com/ntaraujo/killer/releases/latest/download/killer-setup.exe)](https://img.shields.io/badge/-the%20newest%20release-blue)
+For updating this app, just download [![killer-setup.exe](https://img.shields.io/badge/-the%20newest%20release-blue)](https://github.com/ntaraujo/killer/releases/latest/download/killer-setup.exe)
 and follow with the installation to the same folder used before.
 
 It's known the hotkey "Ctrl+Shift+K" may not work until the next user logon
